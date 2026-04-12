@@ -36,6 +36,6 @@ export const router = createRouter({
 })
 
 router.afterEach((to) => {
-  const title = (to.meta?.title as string) || 'Denis Sofonov — Fullstack Developer'
+  const title = (to.meta?.title as string) || 'Denis Sofonov — Fullstack Engineer'
   document.title = title
 })
