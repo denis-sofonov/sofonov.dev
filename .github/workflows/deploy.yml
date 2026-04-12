@@ -19,7 +19,7 @@ jobs:
 
       # Deploy via FTP to Reg.ru
       - name: Deploy to Reg.ru
-        uses: SamKirkland/FTP-Deploy-Action@v4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
