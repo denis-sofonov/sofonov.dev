@@ -10,6 +10,45 @@ const timelines: gsap.core.Timeline[] = []
 const time = ref('')
 let timeInterval: number | null = null
 
+// Text scramble state — each line shows scrambled chars then resolves
+const line1 = ref('')
+const line2 = ref('')
+const line3 = ref('')
+const scrambleChars = '!@#$%^&*()_+-=[]{}|;:,.<>?/~ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+
+function scrambleText(target: ReturnType<typeof ref<string>>, finalText: string, delay: number) {
+  const length = finalText.length
+  let frame = 0
+  const totalFrames = 30 // ~1 second at 30fps
+  const resolveSpeed = length / totalFrames
+
+  // Start with random chars
+  target.value = Array.from({ length }, () =>
+    scrambleChars[Math.floor(Math.random() * scrambleChars.length)]
+  ).join('')
+
+  setTimeout(() => {
+    const interval = setInterval(() => {
+      frame++
+      const resolved = Math.floor(frame * resolveSpeed)
+
+      target.value = finalText
+        .split('')
+        .map((char, i) => {
+          if (i < resolved) return char // resolved
+          if (char === ' ') return ' '
+          return scrambleChars[Math.floor(Math.random() * scrambleChars.length)]
+        })
+        .join('')
+
+      if (frame >= totalFrames) {
+        target.value = finalText
+        clearInterval(interval)
+      }
+    }, 33) // ~30fps
+  }, delay)
+}
+
 function updateTime() {
   const d = new Date()
   const h = String(d.getHours()).padStart(2, '0')
@@ -25,6 +64,14 @@ onMounted(async () => {
   updateTime()
   timeInterval = window.setInterval(updateTime, 1000)
 
+  // Launch text scramble decode for each hero line
+  const text1 = t('atelier.hero.line1')
+  const text2 = t('atelier.hero.line2')
+  const text3 = t('atelier.hero.line3')
+  scrambleText(line1, text1, 300)
+  scrambleText(line2, text2, 600)
+  scrambleText(line3, text3, 900)
+
   const $ = (s: string) => root.value!.querySelectorAll(s)
 
   const tl = gsap.timeline({ defaults: { ease: 'power4.out' } })
@@ -35,11 +82,11 @@ onMounted(async () => {
       { y: 20, opacity: 0 },
       { y: 0, opacity: 1, duration: 0.9, delay: 0.2 })
     .fromTo($('.at-hero__line'),
-      { y: 120, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1.4, stagger: 0.12 }, '-=0.4')
+      { opacity: 0 },
+      { opacity: 1, duration: 0.6, stagger: 0.12 }, '-=0.4')
     .fromTo($('.at-hero__sub'),
       { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1 }, '-=0.8')
+      { y: 0, opacity: 1, duration: 1 }, '-=0.3')
     .fromTo($('.at-hero__meta > *'),
       { y: 20, opacity: 0 },
       { y: 0, opacity: 1, duration: 0.8, stagger: 0.1 }, '-=0.6')
@@ -59,13 +106,13 @@ onUnmounted(() => {
 
       <h1 class="at-hero__title">
         <div class="at-hero__line-wrap">
-          <span class="at-hero__line">{{ t('atelier.hero.line1') }}</span>
+          <span class="at-hero__line at-hero__line--scramble">{{ line1 || t('atelier.hero.line1') }}</span>
         </div>
         <div class="at-hero__line-wrap">
-          <span class="at-hero__line at-hero__line--italic">{{ t('atelier.hero.line2') }}</span>
+          <span class="at-hero__line at-hero__line--italic at-hero__line--scramble">{{ line2 || t('atelier.hero.line2') }}</span>
         </div>
         <div class="at-hero__line-wrap">
-          <span class="at-hero__line">{{ t('atelier.hero.line3') }}</span>
+          <span class="at-hero__line at-hero__line--scramble">{{ line3 || t('atelier.hero.line3') }}</span>
         </div>
       </h1>
 
