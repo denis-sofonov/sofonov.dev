@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import * as THREE from 'three'
+import { EffectComposer, RenderPass, EffectPass, Effect, BlendFunction } from 'postprocessing'
 
 const { t, tm } = useI18n()
 
@@ -202,16 +204,303 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+// ============================================
+// GPU ASCII HERO — fullscreen shader post-processing
+// ============================================
+const heroCanvas = ref<HTMLCanvasElement | null>(null)
+let asciiCleanup: (() => void) | null = null
+
+// Build glyph atlas texture from characters
+function createGlyphAtlas(chars: string, fontSize: number): THREE.Texture {
+  const canvas = document.createElement('canvas')
+  const cellW = Math.ceil(fontSize * 0.6)
+  const cellH = fontSize
+  canvas.width = cellW * chars.length
+  canvas.height = cellH
+  const ctx = canvas.getContext('2d')!
+  ctx.fillStyle = '#000'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.fillStyle = '#fff'
+  ctx.font = `${fontSize}px "Space Mono", monospace`
+  ctx.textBaseline = 'top'
+  for (let i = 0; i < chars.length; i++) {
+    ctx.fillText(chars[i], i * cellW, 0)
+  }
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.minFilter = THREE.LinearFilter
+  tex.magFilter = THREE.LinearFilter
+  tex.generateMipmaps = false
+  return tex
+}
+
+// ASCII fragment shader — postprocessing Effect format
+const asciiFragmentShader = /* glsl */ `
+uniform sampler2D tCharacters;
+uniform vec2 uResolution;
+uniform vec2 uCellSize;
+uniform float uCharCount;
+uniform vec3 uColor;
+uniform float uGlitch;
+uniform float uTime;
+
+// Simple hash for pseudo-random
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
+  vec2 pixel = uv * uResolution;
+  vec2 cell = floor(pixel / uCellSize);
+  vec2 cellCenter = (cell + 0.5) * uCellSize / uResolution;
+
+  // Glitch: offset UV, scramble cells
+  vec2 sampleUV = cellCenter;
+  if (uGlitch > 0.0) {
+    // Horizontal row shift
+    float rowRand = hash(vec2(cell.y, floor(uTime * 30.0)));
+    if (rowRand > 1.0 - uGlitch * 0.8) {
+      sampleUV.x += (hash(vec2(cell.y * 3.0, uTime)) - 0.5) * 0.15 * uGlitch;
+    }
+    // Block displacement
+    float blockRand = hash(cell * 0.1 + floor(uTime * 20.0));
+    if (blockRand > 1.0 - uGlitch * 0.3) {
+      sampleUV += (vec2(hash(cell + uTime), hash(cell * 2.0 + uTime)) - 0.5) * 0.08 * uGlitch;
+    }
+  }
+
+  vec4 sceneColor = texture2D(inputBuffer, sampleUV);
+  float brightness = dot(sceneColor.rgb, vec3(0.299, 0.587, 0.114));
+
+  // Glitch: scramble character index
+  float charIndex = floor(brightness * (uCharCount - 1.0));
+  if (uGlitch > 0.0) {
+    float scramble = hash(cell + floor(uTime * 25.0));
+    if (scramble > 1.0 - uGlitch * 0.5) {
+      charIndex = floor(hash(cell * 7.0 + uTime) * uCharCount);
+    }
+  }
+
+  vec2 cellPos = fract(pixel / uCellSize);
+  vec2 atlasUV = vec2(
+    (charIndex + cellPos.x) / uCharCount,
+    cellPos.y
+  );
+  float charPixel = texture2D(tCharacters, atlasUV).r;
+
+  // Glitch: color channel split
+  vec3 color = uColor;
+  if (uGlitch > 0.0) {
+    float split = uGlitch * 0.4;
+    float r = texture2D(tCharacters, atlasUV + vec2(split * 0.01, 0.0)).r;
+    float b = texture2D(tCharacters, atlasUV - vec2(split * 0.01, 0.0)).r;
+    color = vec3(r * uColor.r * 1.5, charPixel * uColor.g, b * uColor.b * 1.5);
+    charPixel = max(max(r, charPixel), b);
+  }
+
+  outputColor = vec4(color * charPixel, charPixel);
+}
+`
+
+function initAsciiHero(canvas: HTMLCanvasElement) {
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  renderer.setClearColor(0x000000, 0)
+
+  const scene = new THREE.Scene()
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100)
+  camera.position.z = 3.2
+
+  // Lights
+  const light1 = new THREE.DirectionalLight(0xffffff, 2)
+  light1.position.set(3, 4, 5)
+  scene.add(light1)
+  const light2 = new THREE.DirectionalLight(0xffffff, 0.8)
+  light2.position.set(-3, -2, 3)
+  scene.add(light2)
+  scene.add(new THREE.AmbientLight(0xffffff, 0.2))
+
+  // Morphing sphere — vertex displacement with noise
+  const sphereGeo = new THREE.SphereGeometry(2.2, 64, 64)
+  const sphereMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    roughness: 0.3,
+    metalness: 0.6,
+  })
+  const sphere = new THREE.Mesh(sphereGeo, sphereMat)
+  scene.add(sphere)
+
+  // Store original positions for noise displacement
+  const posAttr = sphereGeo.attributes.position
+  const origPositions = new Float32Array(posAttr.array.length)
+  origPositions.set(posAttr.array as Float32Array)
+
+  // Simple 3D noise (good enough for organic displacement)
+  function noise3D(x: number, y: number, z: number): number {
+    const n = Math.sin(x * 1.1 + y * 2.3 + z * 0.7) *
+              Math.cos(y * 1.7 + z * 3.1 + x * 0.5) *
+              Math.sin(z * 2.5 + x * 1.3 + y * 0.9)
+    return n
+  }
+
+  // Glyph atlas
+  const chars = ' .,:;+*?%S#@'
+  const dpr = Math.min(window.devicePixelRatio, 2)
+  const glyphTex = createGlyphAtlas(chars, 128)
+  const cellSize = new THREE.Vector2(6 * dpr, 10 * dpr) // scale cells for retina
+
+  // Get accent color
+  const rootStyles = getComputedStyle(document.documentElement)
+  const accentHex = rootStyles.getPropertyValue('--accent').trim() || '#FF5C00'
+  const accentColor = new THREE.Color(accentHex)
+
+  // Custom ASCII effect via postprocessing
+  class AsciiShaderEffect extends Effect {
+    constructor() {
+      super('AsciiShaderEffect', asciiFragmentShader, {
+        blendFunction: BlendFunction.NORMAL,
+        uniforms: new Map<string, THREE.Uniform>([
+          ['tCharacters', new THREE.Uniform(glyphTex)],
+          ['uResolution', new THREE.Uniform(new THREE.Vector2(1, 1))],
+          ['uCellSize', new THREE.Uniform(cellSize)],
+          ['uCharCount', new THREE.Uniform(chars.length)],
+          ['uColor', new THREE.Uniform(accentColor)],
+          ['uGlitch', new THREE.Uniform(0)],
+          ['uTime', new THREE.Uniform(0)],
+        ]),
+      })
+    }
+  }
+
+  const asciiEffect = new AsciiShaderEffect()
+  const composer = new EffectComposer(renderer)
+  composer.addPass(new RenderPass(scene, camera))
+  composer.addPass(new EffectPass(camera, asciiEffect))
+
+  // Mouse tracking
+  const mouse = { x: 0, y: 0 }
+  const smoothMouse = { x: 0, y: 0 }
+  let glitchAmount = 0
+
+  function onMouseMove(e: MouseEvent) {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1
+  }
+
+  function onClick() {
+    glitchAmount = 1.0
+  }
+
+  function resize() {
+    const parent = canvas.parentElement
+    if (!parent) return
+    const w = parent.clientWidth
+    const h = parent.clientHeight
+    renderer.setSize(w, h)
+    composer.setSize(w, h)
+    camera.aspect = w / h
+    camera.updateProjectionMatrix()
+    const pixelW = w * Math.min(window.devicePixelRatio, 2)
+    const pixelH = h * Math.min(window.devicePixelRatio, 2)
+    const res = asciiEffect.uniforms.get('uResolution')
+    if (res) res.value.set(pixelW, pixelH)
+  }
+
+  resize()
+
+  let animId = 0
+  function animate() {
+    animId = requestAnimationFrame(animate)
+    const t = performance.now() * 0.001
+
+    // Smooth mouse
+    smoothMouse.x += (mouse.x - smoothMouse.x) * 0.05
+    smoothMouse.y += (mouse.y - smoothMouse.y) * 0.05
+
+    // Rotate sphere — slow, meditative
+    sphere.rotation.x = t * 0.06 + smoothMouse.y * 0.3
+    sphere.rotation.y = t * 0.08 + smoothMouse.x * 0.3
+
+    // Vertex displacement — slow organic breathing
+    const pos = posAttr.array as Float32Array
+    for (let i = 0; i < pos.length; i += 3) {
+      const ox = origPositions[i]
+      const oy = origPositions[i + 1]
+      const oz = origPositions[i + 2]
+      const len = Math.sqrt(ox * ox + oy * oy + oz * oz)
+      const nx = ox / len
+      const ny = oy / len
+      const nz = oz / len
+      const displacement = noise3D(
+        ox * 1.2 + t * 0.12,
+        oy * 1.2 + t * 0.1,
+        oz * 1.2 + t * 0.14,
+      ) * 0.25
+      pos[i] = ox + nx * displacement
+      pos[i + 1] = oy + ny * displacement
+      pos[i + 2] = oz + nz * displacement
+    }
+    posAttr.needsUpdate = true
+    sphereGeo.computeVertexNormals()
+
+    // Glitch decay
+    if (glitchAmount > 0.01) {
+      glitchAmount *= 0.92
+    } else {
+      glitchAmount = 0
+    }
+    const glitchU = asciiEffect.uniforms.get('uGlitch')
+    if (glitchU) glitchU.value = glitchAmount
+    const timeU = asciiEffect.uniforms.get('uTime')
+    if (timeU) timeU.value = t
+
+    composer.render()
+  }
+
+  animate()
+  window.addEventListener('mousemove', onMouseMove, { passive: true })
+  const heroSection = canvas.closest('.hero')
+  if (heroSection) heroSection.addEventListener('click', onClick)
+  window.addEventListener('resize', resize)
+
+  // Theme change — update accent color
+  const observer = new MutationObserver(() => {
+    const s = getComputedStyle(document.documentElement)
+    const newAccent = s.getPropertyValue('--accent').trim()
+    if (newAccent) {
+      const uniform = asciiEffect.uniforms.get('uColor')
+      if (uniform) uniform.value.set(newAccent)
+    }
+  })
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+
+  return () => {
+    cancelAnimationFrame(animId)
+    window.removeEventListener('mousemove', onMouseMove)
+    if (heroSection) heroSection.removeEventListener('click', onClick)
+    window.removeEventListener('resize', resize)
+    observer.disconnect()
+    sphereGeo.dispose()
+    sphereMat.dispose()
+    glyphTex.dispose()
+    composer.dispose()
+    renderer.dispose()
+  }
+}
+
 onMounted(() => {
   loadActivity()
   updateScrollProgress()
   window.addEventListener('scroll', updateScrollProgress, { passive: true })
   window.addEventListener('resize', updateScrollProgress)
+  if (heroCanvas.value) {
+    asciiCleanup = initAsciiHero(heroCanvas.value)
+  }
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', updateScrollProgress)
   window.removeEventListener('resize', updateScrollProgress)
+  if (asciiCleanup) asciiCleanup()
 })
 </script>
 
@@ -222,6 +511,8 @@ onUnmounted(() => {
 
     <!-- HERO -->
     <section id="hero" class="hero">
+      <!-- GPU ASCII canvas — fullscreen background -->
+      <canvas ref="heroCanvas" class="hero__ascii-bg"></canvas>
       <div class="hero__body">
         <div class="hero__main">
           <div class="hero__prompt">&gt;<span class="hero__cursor">_</span></div>
@@ -321,6 +612,7 @@ onUnmounted(() => {
               <span v-if="activityError">· mock</span>
             </div>
           </div>
+
         </aside>
       </div>
     </section>
@@ -583,7 +875,9 @@ onUnmounted(() => {
 .hero__body {
   display: flex;
   width: 100%;
-  flex: 1; // grow to fill .hero, but don't enforce min-height (lets content breathe)
+  flex: 1;
+  position: relative;
+  z-index: 1;
 
   @media (max-width: 768px) {
     flex-direction: column;
@@ -596,6 +890,7 @@ onUnmounted(() => {
   flex-direction: column;
   justify-content: flex-start;
   padding: 64px 32px 80px;
+  background: rgba(255, 255, 255, 0.6);
 
   @media (max-width: 768px) {
     padding: 56px 16px 56px;
@@ -623,43 +918,9 @@ onUnmounted(() => {
   position: relative;
   display: inline-block;
   white-space: nowrap;
-  // Chromatic aberration glitch via animated text-shadow
-  animation: brutNameGlitch 7s infinite steps(1);
-
-  &:hover {
-    animation-duration: 0.6s;
-  }
-
   @media (max-width: 600px) {
     font-size: clamp(28px, 9vw, 56px);
     white-space: normal;
-  }
-}
-
-@keyframes brutNameGlitch {
-  0%, 4%, 7%, 11%, 14%, 100% {
-    text-shadow: none;
-    transform: translate(0);
-  }
-  5% {
-    text-shadow: -4px 0 var(--accent), 4px 0 var(--muted);
-    transform: translate(-2px, 1px);
-  }
-  6% {
-    text-shadow: 5px 0 var(--accent), -5px 0 var(--muted);
-    transform: translate(3px, -1px);
-  }
-  8% {
-    text-shadow: -3px 0 var(--accent), 3px 0 var(--muted);
-    transform: translate(-1px, 2px);
-  }
-  12% {
-    text-shadow: 4px 0 var(--accent), -4px 0 var(--muted);
-    transform: translate(2px, -1px);
-  }
-  13% {
-    text-shadow: -2px 0 var(--accent), 2px 0 var(--muted);
-    transform: translate(-1px, 0);
   }
 }
 
@@ -840,6 +1101,7 @@ onUnmounted(() => {
   flex-direction: column;
   justify-content: flex-start;
   padding-top: 64px;
+  background: rgba(255, 255, 255, 0.6);
   flex-shrink: 0;
 
   @media (max-width: 1100px) {
@@ -1001,6 +1263,18 @@ onUnmounted(() => {
   letter-spacing: 0.05em;
   color: var(--muted);
   text-transform: lowercase;
+}
+
+// ==========================================
+// GPU ASCII — fullscreen hero background
+// ==========================================
+.hero__ascii-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
 }
 
 // ==========================================
