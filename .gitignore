@@ -1,0 +1,13 @@
+node_modules
+dist
+.DS_Store
+*.local
+.env
+.env.*
+.playwright-mcp
+*.png
+*.jpg
+*.jpeg
+*.pdf
+.idea/
+.mcp.json

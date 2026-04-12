@@ -1,0 +1,56 @@
+// Forma — premium e-commerce design tokens
+// Light luxury, warm cream + black + copper accent
+
+// COLORS
+$fo-bg: #fafaf6;          // warm off-white
+$fo-bg-alt: #f2f0e9;      // slightly darker
+$fo-bg-elevated: #ebe8df; // for cards
+$fo-fg: #0a0a0a;          // jet black
+$fo-fg-muted: #5a5a58;
+$fo-fg-subtle: #98968e;
+$fo-border: #e0ddd2;
+$fo-border-bright: #c8c5b8;
+$fo-accent: #b8593a;      // warm copper / terracotta
+$fo-accent-hover: #d16a45;
+$fo-success: #2d6a4f;
+
+@mixin fo-display {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+
+@mixin fo-sans {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+}
+
+@mixin fo-mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  letter-spacing: 0;
+}
+
+@mixin fo-eyebrow {
+  display: inline-block;
+  @include fo-mono;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: $fo-fg-muted;
+  text-transform: uppercase;
+}
+
+@mixin fo-section-padding {
+  padding: 160px 40px;
+  @media (max-width: 900px) { padding: 100px 24px; }
+}
+
+@mixin fo-display-title {
+  @include fo-display;
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-weight: 500;
+  color: $fo-fg;
+}

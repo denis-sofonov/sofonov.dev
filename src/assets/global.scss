@@ -1,0 +1,340 @@
+// ==========================================
+// GLOBAL RESET — applies to everything
+// ==========================================
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  overflow-x: clip;
+}
+
+// ==========================================
+// BRUTALIST STYLES — scoped to .page only
+// Pet projects (standalone routes) are NOT affected
+// ==========================================
+.page {
+  --bg: #faf7f0;
+  --fg: #0a0805;
+  --accent: #dc4513;
+  --accent-soft: #f0a385;
+  --border: #0a0805;
+  --border-subtle: #beb5a3;
+  --muted: #847a6a;
+  --font: 'Space Mono', monospace;
+  --font-serif: 'Instrument Serif', 'Times New Roman', Georgia, serif;
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  -webkit-font-smoothing: auto;
+  cursor: crosshair;
+
+  *, *::before, *::after {
+    border-radius: 0 !important;
+  }
+
+  a, button {
+    cursor: crosshair;
+    font-family: var(--font);
+  }
+
+  ::selection {
+    background: var(--fg);
+    color: var(--bg);
+  }
+}
+
+:root[data-theme='dark'] .page {
+  --bg: #0a0805;
+  --fg: #faf7f0;
+  --accent: #ff5a28;
+  --accent-soft: #c44a23;
+  --border: #faf7f0;
+  --border-subtle: #2a241b;
+  --muted: #948a78;
+}
+
+// Brutalist scrollbar — only when on main brutalist page
+body:has(.page) {
+  &::-webkit-scrollbar {
+    width: 10px;
+    background: var(--bg, #fff);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--fg, #000);
+    border: 2px solid var(--bg, #fff);
+  }
+}
+
+// HEADER
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  background: var(--bg);
+  border-bottom: 2px solid var(--border);
+}
+
+.header__logo {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--bg);
+  background: var(--fg);
+  padding: 12px 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  border-right: 2px solid var(--border);
+
+  &:hover {
+    background: var(--accent);
+  }
+}
+
+.header__controls {
+  display: flex;
+}
+
+.header__btn {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  background: transparent;
+  color: var(--fg);
+  border: none;
+  border-left: 2px solid var(--border);
+  padding: 12px 20px;
+  transition: none;
+
+  &:hover {
+    background: var(--fg);
+    color: var(--bg);
+  }
+
+  &:active {
+    background: var(--accent);
+    color: #fff;
+  }
+}
+
+// FOOTER
+.footer {
+  padding: 16px 24px;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  border-top: 2px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  @media (max-width: 768px) {
+    padding: 12px 16px;
+    flex-direction: column;
+  }
+}
+
+// Serif italic accent for year — typographic mix
+.footer__year {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  letter-spacing: 0;
+  color: var(--fg);
+  text-transform: none;
+
+  em {
+    color: var(--accent);
+    font-style: italic;
+  }
+}
+
+// Underlined hyperlink — canonical brutalist signal
+.footer__link {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: none;
+
+  &:hover {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+  }
+
+  &:visited {
+    color: var(--muted);
+  }
+}
+
+// SECTION TITLE
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  padding: 12px 24px;
+  border-bottom: 2px solid var(--border);
+  background: var(--fg);
+  color: var(--bg);
+
+  @media (max-width: 768px) {
+    padding: 10px 16px;
+  }
+}
+
+// ANIMATIONS — only structural, no fading
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+// Glitch — clip-path slices for chromatic aberration
+@keyframes brutGlitch {
+  0%, 100% {
+    clip-path: inset(0 0 0 0);
+    transform: translate(0);
+  }
+  5% {
+    clip-path: inset(20% 0 60% 0);
+    transform: translate(-3px, -1px);
+  }
+  10% {
+    clip-path: inset(50% 0 20% 0);
+    transform: translate(3px, 1px);
+  }
+  15% {
+    clip-path: inset(10% 0 70% 0);
+    transform: translate(-2px, 2px);
+  }
+  20%, 100% {
+    clip-path: inset(0 0 0 0);
+    transform: translate(0);
+  }
+}
+
+@keyframes brutGlitch2 {
+  0%, 100% {
+    clip-path: inset(0 0 0 0);
+    transform: translate(0);
+  }
+  5% {
+    clip-path: inset(60% 0 10% 0);
+    transform: translate(3px, 2px);
+  }
+  10% {
+    clip-path: inset(30% 0 40% 0);
+    transform: translate(-3px, -1px);
+  }
+  15% {
+    clip-path: inset(70% 0 5% 0);
+    transform: translate(2px, -2px);
+  }
+  20%, 100% {
+    clip-path: inset(0 0 0 0);
+    transform: translate(0);
+  }
+}
+
+// Theme switch glitch — brief distortion when toggling
+@keyframes brutThemeGlitch {
+  0% { filter: none; transform: translate(0); }
+  20% { filter: hue-rotate(-30deg) contrast(1.4); transform: translate(-3px, 1px); }
+  40% { filter: invert(0.05) hue-rotate(15deg); transform: translate(2px, -2px); }
+  60% { filter: contrast(1.2); transform: translate(-1px, 2px); }
+  80% { filter: hue-rotate(10deg); transform: translate(1px, 0); }
+  100% { filter: none; transform: translate(0); }
+}
+
+.page--glitching {
+  animation: brutThemeGlitch 0.45s steps(8) both;
+}
+
+// Brutalist HR — visible structural divider
+hr.brut-divider {
+  border: none;
+  border-top: 4px solid var(--fg);
+  margin: 0;
+  padding: 0;
+  height: 0;
+}
+
+hr.brut-divider--thin {
+  border-top-width: 1px;
+}
+
+hr.brut-divider--accent {
+  border-top-color: var(--accent);
+}
+
+// Typographic meta bar — section header with metadata, dark fill
+.brut-meta-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 24px;
+  border-top: 2px solid var(--border);
+  border-bottom: 2px solid var(--border);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bg);
+  background: var(--fg);
+
+  @media (max-width: 768px) {
+    padding: 12px 16px;
+    gap: 10px;
+    font-size: 10px;
+  }
+}
+
+.brut-meta-bar__num {
+  color: var(--accent);
+  letter-spacing: 0.1em;
+}
+
+.brut-meta-bar__text {
+  white-space: nowrap;
+}
+
+.brut-meta-bar__text--accent {
+  color: var(--accent);
+}
+
+.brut-meta-bar__sep {
+  color: var(--muted);
+  letter-spacing: 0;
+}
+
+.brut-meta-bar__line {
+  flex: 1;
+  height: 1px;
+  background: var(--muted);
+  margin: 0 8px;
+  opacity: 0.5;
+}

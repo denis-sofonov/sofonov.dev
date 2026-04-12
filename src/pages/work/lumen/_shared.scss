@@ -1,0 +1,57 @@
+// Shared design tokens for Lumen — warm editorial luxury
+// Wine bar / hospitality aesthetic
+
+// COLORS — warm dark
+$lu-bg: #0e0a08;          // deep warm black
+$lu-bg-alt: #14100c;      // slightly lighter
+$lu-bg-elevated: #1c1612; // for cards
+$lu-fg: #f4ede1;          // warm cream
+$lu-fg-muted: #a89a87;    // dusty taupe
+$lu-fg-subtle: #6b5e4f;   // very muted
+$lu-border: #2a2018;      // warm border
+$lu-border-bright: #3d2f23;
+$lu-accent: #c8472d;      // wine red / terracotta
+$lu-accent-bright: #e85d3a;
+$lu-gold: #d4a960;        // antique gold
+
+@mixin lu-display {
+  font-family: 'Cormorant Garamond', 'Times New Roman', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+@mixin lu-display-italic {
+  font-family: 'Cormorant Garamond', 'Times New Roman', Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+@mixin lu-sans {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  letter-spacing: 0;
+}
+
+@mixin lu-eyebrow {
+  display: inline-block;
+  @include lu-sans;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: $lu-gold;
+  margin-bottom: 24px;
+}
+
+@mixin lu-display-title {
+  @include lu-display;
+  font-size: clamp(40px, 6vw, 84px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: $lu-fg;
+  font-weight: 400;
+}
+
+@mixin lu-section-padding {
+  padding: 140px 32px;
+  @media (max-width: 768px) { padding: 80px 20px; }
+}
