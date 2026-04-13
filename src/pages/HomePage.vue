@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import * as THREE from 'three'
-import { EffectComposer, RenderPass, EffectPass, Effect, BlendFunction } from 'postprocessing'
+import { AsciiEffect } from 'three/examples/jsm/effects/AsciiEffect.js'
 
 const { t, tm } = useI18n()
 
@@ -210,96 +210,6 @@ function formatDate(iso: string): string {
 const heroCanvas = ref<HTMLCanvasElement | null>(null)
 let asciiCleanup: (() => void) | null = null
 
-// Build glyph atlas texture from characters
-function createGlyphAtlas(chars: string, fontSize: number): THREE.Texture {
-  const canvas = document.createElement('canvas')
-  const cellW = Math.ceil(fontSize * 0.6)
-  const cellH = fontSize
-  canvas.width = cellW * chars.length
-  canvas.height = cellH
-  const ctx = canvas.getContext('2d')!
-  ctx.fillStyle = '#000'
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
-  ctx.fillStyle = '#fff'
-  ctx.font = `${fontSize}px "Space Mono", monospace`
-  ctx.textBaseline = 'top'
-  for (let i = 0; i < chars.length; i++) {
-    ctx.fillText(chars[i], i * cellW, 0)
-  }
-  const tex = new THREE.CanvasTexture(canvas)
-  tex.minFilter = THREE.LinearFilter
-  tex.magFilter = THREE.LinearFilter
-  tex.generateMipmaps = false
-  return tex
-}
-
-// ASCII fragment shader — postprocessing Effect format
-const asciiFragmentShader = /* glsl */ `
-uniform sampler2D tCharacters;
-uniform vec2 uResolution;
-uniform vec2 uCellSize;
-uniform float uCharCount;
-uniform vec3 uColor;
-uniform float uGlitch;
-uniform float uTime;
-
-// Simple hash for pseudo-random
-float hash(vec2 p) {
-  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-}
-
-void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
-  vec2 pixel = uv * uResolution;
-  vec2 cell = floor(pixel / uCellSize);
-  vec2 cellCenter = (cell + 0.5) * uCellSize / uResolution;
-
-  // Glitch: offset UV, scramble cells
-  vec2 sampleUV = cellCenter;
-  if (uGlitch > 0.0) {
-    // Horizontal row shift
-    float rowRand = hash(vec2(cell.y, floor(uTime * 30.0)));
-    if (rowRand > 1.0 - uGlitch * 0.8) {
-      sampleUV.x += (hash(vec2(cell.y * 3.0, uTime)) - 0.5) * 0.15 * uGlitch;
-    }
-    // Block displacement
-    float blockRand = hash(cell * 0.1 + floor(uTime * 20.0));
-    if (blockRand > 1.0 - uGlitch * 0.3) {
-      sampleUV += (vec2(hash(cell + uTime), hash(cell * 2.0 + uTime)) - 0.5) * 0.08 * uGlitch;
-    }
-  }
-
-  vec4 sceneColor = texture2D(inputBuffer, sampleUV);
-  float brightness = dot(sceneColor.rgb, vec3(0.299, 0.587, 0.114));
-
-  // Glitch: scramble character index
-  float charIndex = floor(brightness * (uCharCount - 1.0));
-  if (uGlitch > 0.0) {
-    float scramble = hash(cell + floor(uTime * 25.0));
-    if (scramble > 1.0 - uGlitch * 0.5) {
-      charIndex = floor(hash(cell * 7.0 + uTime) * uCharCount);
-    }
-  }
-
-  vec2 cellPos = fract(pixel / uCellSize);
-  vec2 atlasUV = vec2(
-    (charIndex + cellPos.x) / uCharCount,
-    cellPos.y
-  );
-  float charPixel = texture2D(tCharacters, atlasUV).r;
-
-  // Glitch: color channel split
-  vec3 color = uColor;
-  if (uGlitch > 0.0) {
-    float split = uGlitch * 0.4;
-    float r = texture2D(tCharacters, atlasUV + vec2(split * 0.01, 0.0)).r;
-    float b = texture2D(tCharacters, atlasUV - vec2(split * 0.01, 0.0)).r;
-    color = vec3(r * uColor.r * 1.5, charPixel * uColor.g, b * uColor.b * 1.5);
-    charPixel = max(max(r, charPixel), b);
-  }
-
-  outputColor = vec4(color * charPixel, charPixel);
-}
-`
 
 function initAsciiHero(canvas: HTMLCanvasElement) {
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
@@ -334,75 +244,80 @@ function initAsciiHero(canvas: HTMLCanvasElement) {
   const origPositions = new Float32Array(posAttr.array.length)
   origPositions.set(posAttr.array as Float32Array)
 
-  // Simple 3D noise (good enough for organic displacement)
   function noise3D(x: number, y: number, z: number): number {
-    const n = Math.sin(x * 1.1 + y * 2.3 + z * 0.7) *
-              Math.cos(y * 1.7 + z * 3.1 + x * 0.5) *
-              Math.sin(z * 2.5 + x * 1.3 + y * 0.9)
-    return n
+    return Math.sin(x * 1.1 + y * 2.3 + z * 0.7) *
+           Math.cos(y * 1.7 + z * 3.1 + x * 0.5) *
+           Math.sin(z * 2.5 + x * 1.3 + y * 0.9)
   }
-
-  // Glyph atlas
-  const chars = ' .,:;+*?%S#@'
-  const dpr = Math.min(window.devicePixelRatio, 2)
-  const glyphTex = createGlyphAtlas(chars, 128)
-  const cellSize = new THREE.Vector2(6 * dpr, 10 * dpr) // scale cells for retina
 
   // Get accent color
   const rootStyles = getComputedStyle(document.documentElement)
   const accentHex = rootStyles.getPropertyValue('--accent').trim() || '#FF5C00'
-  const accentColor = new THREE.Color(accentHex)
 
-  // Custom ASCII effect via postprocessing
-  class AsciiShaderEffect extends Effect {
-    constructor() {
-      super('AsciiShaderEffect', asciiFragmentShader, {
-        blendFunction: BlendFunction.NORMAL,
-        uniforms: new Map<string, THREE.Uniform>([
-          ['tCharacters', new THREE.Uniform(glyphTex)],
-          ['uResolution', new THREE.Uniform(new THREE.Vector2(1, 1))],
-          ['uCellSize', new THREE.Uniform(cellSize)],
-          ['uCharCount', new THREE.Uniform(chars.length)],
-          ['uColor', new THREE.Uniform(accentColor)],
-          ['uGlitch', new THREE.Uniform(0)],
-          ['uTime', new THREE.Uniform(0)],
-        ]),
-      })
+  // Three.js AsciiEffect — DOM-based, pixel-perfect characters
+  const effect = new AsciiEffect(renderer, ` .:-=+*#%@`, {
+    resolution: 0.3,
+    scale: 1,
+    color: false,
+    invert: true,
+  })
+
+  const parent = canvas.parentElement!
+  effect.setSize(parent.clientWidth, parent.clientHeight)
+  effect.domElement.style.color = accentHex
+  effect.domElement.style.backgroundColor = 'transparent'
+  effect.domElement.style.position = 'absolute'
+  effect.domElement.style.inset = '0'
+  effect.domElement.style.width = '100%'
+  effect.domElement.style.height = '100%'
+  effect.domElement.style.overflow = 'hidden'
+  effect.domElement.style.zIndex = '0'
+  effect.domElement.style.pointerEvents = 'none'
+  effect.domElement.style.fontFamily = '"Space Mono", monospace'
+
+  // Fit ASCII characters to full container width by adjusting letter-spacing
+  const asciiTable = effect.domElement.querySelector('table') as HTMLTableElement
+  function fitAsciiWidth() {
+    const td = asciiTable?.querySelector('td') as HTMLElement | null
+    if (!td) return
+    // Temporarily reset letter-spacing & td width to measure natural text width
+    const origLS = asciiTable.style.letterSpacing
+    const origTdW = td.style.width
+    asciiTable.style.letterSpacing = '0px'
+    td.style.width = 'auto'
+    const naturalW = td.scrollWidth
+    const targetW = parent.clientWidth
+    if (naturalW > 0) {
+      // chars per row
+      const charsPerRow = Math.floor(targetW * 0.3) // resolution = 0.3
+      const extraPerChar = (targetW - naturalW) / charsPerRow
+      asciiTable.style.letterSpacing = `${extraPerChar}px`
+    } else {
+      asciiTable.style.letterSpacing = origLS
     }
+    td.style.width = origTdW
   }
-
-  const asciiEffect = new AsciiShaderEffect()
-  const composer = new EffectComposer(renderer)
-  composer.addPass(new RenderPass(scene, camera))
-  composer.addPass(new EffectPass(camera, asciiEffect))
+  parent.appendChild(effect.domElement)
+  // Hide the raw WebGL canvas
+  canvas.style.display = 'none'
 
   // Mouse tracking
   const mouse = { x: 0, y: 0 }
   const smoothMouse = { x: 0, y: 0 }
-  let glitchAmount = 0
 
   function onMouseMove(e: MouseEvent) {
     mouse.x = (e.clientX / window.innerWidth) * 2 - 1
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1
   }
 
-  function onClick() {
-    glitchAmount = 1.0
-  }
-
   function resize() {
-    const parent = canvas.parentElement
-    if (!parent) return
     const w = parent.clientWidth
     const h = parent.clientHeight
     renderer.setSize(w, h)
-    composer.setSize(w, h)
+    effect.setSize(w, h)
     camera.aspect = w / h
     camera.updateProjectionMatrix()
-    const pixelW = w * Math.min(window.devicePixelRatio, 2)
-    const pixelH = h * Math.min(window.devicePixelRatio, 2)
-    const res = asciiEffect.uniforms.get('uResolution')
-    if (res) res.value.set(pixelW, pixelH)
+    fitAsciiWidth()
   }
 
   resize()
@@ -416,11 +331,11 @@ function initAsciiHero(canvas: HTMLCanvasElement) {
     smoothMouse.x += (mouse.x - smoothMouse.x) * 0.05
     smoothMouse.y += (mouse.y - smoothMouse.y) * 0.05
 
-    // Rotate sphere — slow, meditative
-    sphere.rotation.x = t * 0.06 + smoothMouse.y * 0.3
-    sphere.rotation.y = t * 0.08 + smoothMouse.x * 0.3
+    // Rotate sphere — very slow, ambient
+    sphere.rotation.x = t * 0.03 + smoothMouse.y * 0.3
+    sphere.rotation.y = t * 0.04 + smoothMouse.x * 0.3
 
-    // Vertex displacement — slow organic breathing
+    // Vertex displacement — gentle breathing
     const pos = posAttr.array as Float32Array
     for (let i = 0; i < pos.length; i += 3) {
       const ox = origPositions[i]
@@ -431,9 +346,9 @@ function initAsciiHero(canvas: HTMLCanvasElement) {
       const ny = oy / len
       const nz = oz / len
       const displacement = noise3D(
-        ox * 1.2 + t * 0.12,
-        oy * 1.2 + t * 0.1,
-        oz * 1.2 + t * 0.14,
+        ox * 1.2 + t * 0.06,
+        oy * 1.2 + t * 0.05,
+        oz * 1.2 + t * 0.07,
       ) * 0.25
       pos[i] = ox + nx * displacement
       pos[i + 1] = oy + ny * displacement
@@ -442,48 +357,31 @@ function initAsciiHero(canvas: HTMLCanvasElement) {
     posAttr.needsUpdate = true
     sphereGeo.computeVertexNormals()
 
-    // Glitch decay
-    if (glitchAmount > 0.01) {
-      glitchAmount *= 0.92
-    } else {
-      glitchAmount = 0
-    }
-    const glitchU = asciiEffect.uniforms.get('uGlitch')
-    if (glitchU) glitchU.value = glitchAmount
-    const timeU = asciiEffect.uniforms.get('uTime')
-    if (timeU) timeU.value = t
-
-    composer.render()
+    effect.render(scene, camera)
+    fitAsciiWidth()
   }
 
   animate()
   window.addEventListener('mousemove', onMouseMove, { passive: true })
-  const heroSection = canvas.closest('.hero')
-  if (heroSection) heroSection.addEventListener('click', onClick)
   window.addEventListener('resize', resize)
 
   // Theme change — update accent color
   const observer = new MutationObserver(() => {
     const s = getComputedStyle(document.documentElement)
     const newAccent = s.getPropertyValue('--accent').trim()
-    if (newAccent) {
-      const uniform = asciiEffect.uniforms.get('uColor')
-      if (uniform) uniform.value.set(newAccent)
-    }
+    if (newAccent) effect.domElement.style.color = newAccent
   })
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
 
   return () => {
     cancelAnimationFrame(animId)
     window.removeEventListener('mousemove', onMouseMove)
-    if (heroSection) heroSection.removeEventListener('click', onClick)
     window.removeEventListener('resize', resize)
     observer.disconnect()
     sphereGeo.dispose()
     sphereMat.dispose()
-    glyphTex.dispose()
-    composer.dispose()
     renderer.dispose()
+    if (effect.domElement.parentNode) effect.domElement.parentNode.removeChild(effect.domElement)
   }
 }
 
@@ -870,6 +768,7 @@ onUnmounted(() => {
   flex-direction: column;
   border-bottom: 2px solid var(--border);
   position: relative;
+  background: var(--bg);
 }
 
 .hero__body {
@@ -890,7 +789,7 @@ onUnmounted(() => {
   flex-direction: column;
   justify-content: flex-start;
   padding: 64px 32px 80px;
-  background: rgba(255, 255, 255, 0.6);
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
 
   @media (max-width: 768px) {
     padding: 56px 16px 56px;
@@ -1095,17 +994,17 @@ onUnmounted(() => {
 
 // Metadata sidebar — dense info panel
 .hero__sidebar {
-  width: 380px;
+  width: 340px;
   border-left: 2px solid var(--border);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   padding-top: 64px;
-  background: rgba(255, 255, 255, 0.6);
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
   flex-shrink: 0;
 
   @media (max-width: 1100px) {
-    width: 320px;
+    width: 280px;
   }
 
   @media (max-width: 768px) {
@@ -1168,6 +1067,9 @@ onUnmounted(() => {
 
 .hero__meta-val--accent {
   color: var(--accent);
+  background: var(--fg);
+  padding: 4px 8px;
+  font-weight: 900;
 }
 
 .hero__link {
