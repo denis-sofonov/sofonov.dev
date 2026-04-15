@@ -23,12 +23,6 @@ function initParticleText(canvas: HTMLCanvasElement, text: string): { cleanup: (
   let particles: { ox: number; oy: number; x: number; y: number; vx: number; vy: number; r: number }[] = []
   let mouseX = -9999
   let mouseY = -9999
-  let globalMouseX = 0.5
-  let globalMouseY = 0.5
-  let tiltX = 0
-  let tiltY = 0
-  const TILT_MAX = 12
-  const TILT_LERP = 0.06
   const DOT_RADIUS = 1.0
 
   function getColor() {
@@ -67,7 +61,7 @@ function initParticleText(canvas: HTMLCanvasElement, text: string): { cleanup: (
 
     const imageData = offCtx.getImageData(0, 0, w, h)
     const data = imageData.data
-    const gap = 2
+    const gap = 3
     const newParticles: typeof particles = []
 
     for (let y = 0; y < h; y += gap) {
@@ -78,7 +72,7 @@ function initParticleText(canvas: HTMLCanvasElement, text: string): { cleanup: (
           const jy = (Math.random() - 0.5) * gap * 2.0
           if (data[idx + 3] < 180 && Math.random() < 0.3) continue
           if (Math.random() < 0.03) continue
-          if (Math.random() < 0.3) {
+          if (Math.random() < 0.18) {
             newParticles.push({ ox: x+jx+(Math.random()-0.5)*3, oy: y+jy+(Math.random()-0.5)*3, x: x+jx+(Math.random()-0.5)*3, y: y+jy+(Math.random()-0.5)*3, vx:0, vy:0, r: DOT_RADIUS*(0.4+Math.random()*0.6) })
           }
           newParticles.push({ ox: x+jx, oy: y+jy, x: x+jx, y: y+jy, vx:0, vy:0, r: DOT_RADIUS*(0.6+Math.random()*0.8) })
@@ -94,8 +88,7 @@ function initParticleText(canvas: HTMLCanvasElement, text: string): { cleanup: (
     const prevY = mouseY
     mouseX = e.clientX - rect.left
     mouseY = e.clientY - rect.top
-    globalMouseX = e.clientX / window.innerWidth
-    globalMouseY = e.clientY / window.innerHeight
+    if (assembleTime > 0) return
     if (prevX < -999) return
     const mvx = mouseX - prevX, mvy = mouseY - prevY
     const speed = Math.sqrt(mvx*mvx + mvy*mvy)
@@ -117,19 +110,36 @@ function initParticleText(canvas: HTMLCanvasElement, text: string): { cleanup: (
   function onMouseLeave() { mouseX = -9999; mouseY = -9999 }
 
   let animId = 0
-  let assembleTime = 3.0 // seconds of stronger pull to assemble
+  let assembleTime = 1.2 // seconds of stronger pull to assemble
+  let lastT = performance.now()
   function animate() {
     animId = requestAnimationFrame(animate)
+    const now = performance.now()
+    const dt = Math.min((now - lastT) / 1000, 0.05)
+    lastT = now
     const w = parent.clientWidth, h = parent.clientHeight
     ctx.clearRect(0, 0, w, h)
-    if (assembleTime > 0) assembleTime -= 0.016
-    const targetTiltY = (globalMouseX - 0.5) * TILT_MAX * 2
-    const targetTiltX = -(globalMouseY - 0.5) * TILT_MAX
-    tiltX += (targetTiltX - tiltX) * TILT_LERP
-    tiltY += (targetTiltY - tiltY) * TILT_LERP
-    canvas.style.transform = `perspective(1200px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`
+    if (assembleTime > 0) assembleTime -= dt
     const colorBase = getColor()
-    const time = performance.now() * 0.001
+    const assembling = assembleTime > 0
+    const time = assembling ? 0 : now * 0.001
+
+    if (assembling) {
+      // Fast path — simple lerp to home, constant alpha, no drift math
+      const lerp = 0.05
+      ctx.fillStyle = colorBase + '0.85)'
+      ctx.beginPath()
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i]
+        p.x += (p.ox - p.x) * lerp
+        p.y += (p.oy - p.y) * lerp
+        ctx.moveTo(p.x + p.r, p.y)
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2)
+      }
+      ctx.fill()
+      return
+    }
+
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i]
 
@@ -141,23 +151,17 @@ function initParticleText(canvas: HTMLCanvasElement, text: string): { cleanup: (
       const targetX = p.ox + driftX
       const targetY = p.oy + driftY
 
-      if (assembleTime > 0) {
-        // Assembling — direct lerp to home, no velocity
-        const t = 0.04
-        p.x += (targetX - p.x) * t
-        p.y += (targetY - p.y) * t
-        p.vx = 0; p.vy = 0
-      } else {
-        // Normal — velocity-based with brush interaction
-        p.vx *= 0.97; p.vy *= 0.97
-        const speed = Math.sqrt(p.vx*p.vx + p.vy*p.vy)
-        const homeX = targetX-p.x, homeY = targetY-p.y
-        const homePull = speed < 2 ? 0.015 : 0.003
-        p.vx += homeX*homePull; p.vy += homeY*homePull
-        p.x += p.vx; p.y += p.vy
-      }
-      const distFromHome = Math.sqrt((p.x-p.ox)**2 + (p.y-p.oy)**2)
-      const alpha = Math.max(0.15, 0.85 - distFromHome*0.003)
+      // Velocity-based with brush interaction
+      p.vx *= 0.97; p.vy *= 0.97
+      const vmag2 = p.vx*p.vx + p.vy*p.vy
+      const homeX = targetX-p.x, homeY = targetY-p.y
+      const homePull = vmag2 < 4 ? 0.015 : 0.003
+      p.vx += homeX*homePull; p.vy += homeY*homePull
+      p.x += p.vx; p.y += p.vy
+
+      const dhx = p.x-p.ox, dhy = p.y-p.oy
+      const distSq = dhx*dhx + dhy*dhy
+      const alpha = distSq > 48400 ? 0.15 : Math.max(0.15, 0.85 - Math.sqrt(distSq)*0.003)
       ctx.fillStyle = colorBase + alpha + ')'
       ctx.beginPath()
       ctx.arc(p.x, p.y, p.r, 0, Math.PI*2)
@@ -203,7 +207,7 @@ function initParticleText(canvas: HTMLCanvasElement, text: string): { cleanup: (
       p.vx = 0
       p.vy = 0
     }
-    assembleTime = 3.0
+    assembleTime = 1.2
   }
 
   return {

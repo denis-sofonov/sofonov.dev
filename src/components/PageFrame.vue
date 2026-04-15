@@ -70,7 +70,7 @@ onUnmounted(() => {
 .pf {
   min-height: 100vh;
   min-height: 100svh;
-  padding: 56px 20px 12px;
+  padding: 56px 20px 20px;
   display: flex;
 
   @media (max-width: 768px) {
