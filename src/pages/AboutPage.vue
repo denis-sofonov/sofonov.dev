@@ -48,50 +48,54 @@ async function loadActivity() {
 
 onMounted(() => {
   loadActivity()
-  gsap.from('.about__statement', { y: 40, opacity: 0, duration: 0.8, ease: 'power3.out', delay: 0.2 })
-  gsap.from('.about__pitch', { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out', delay: 0.5 })
-  gsap.from('.meta__item', { y: 10, opacity: 0, stagger: 0.04, duration: 0.3, ease: 'power2.out', delay: 0.7 })
+  gsap.from('.about__statement', { opacity: 0, duration: 0.5, ease: 'power2.out', delay: 0.1 })
+  gsap.from('.about__signoff', { opacity: 0, duration: 0.4, ease: 'power2.out', delay: 0.25 })
+  gsap.from('.about__pitch', { opacity: 0, duration: 0.5, ease: 'power2.out', delay: 0.35 })
+  gsap.from('.meta__item', { opacity: 0, stagger: 0.05, duration: 0.35, ease: 'power2.out', delay: 0.45 })
 
-  // Activity cells — wave animation from top-left to bottom-right
+  // Activity cells — soft opacity stagger, no scale pop
   document.querySelectorAll('.activity__cell').forEach((cell, i) => {
     const el = cell as HTMLElement
     const col = Math.floor(i / DAYS_PER_WEEK)
     const row = i % DAYS_PER_WEEK
-    const delay = (col * 0.03 + row * 0.04) + 0.8
+    const delay = (col * 0.02 + row * 0.025) + 0.55
     gsap.fromTo(el,
-      { scale: 0, opacity: 0 },
-      { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(2)', delay }
+      { opacity: 0 },
+      { opacity: 1, duration: 0.3, ease: 'power2.out', delay }
     )
   })
 })
 </script>
 
 <template>
-  <PageFrame num="02" :section="t('nav.about')" :subtitle="t('sections.about')" sheet="SHEET 02/08">
+  <PageFrame num="02" :section="t('nav.about')">
   <div class="about-page">
     <!-- Big statement — centerpiece -->
     <h1 class="about__statement">{{ t('statement') }}</h1>
 
-    <!-- Pitch — smaller serif -->
-    <p class="about__pitch">{{ t('heroPitch') }}</p>
+    <!-- Sign-off — breaking asymmetric element -->
+    <p class="about__signoff">{{ t('aboutSignoff') }}</p>
 
-    <!-- Meta line -->
+    <!-- Secondary — personal angle, different message -->
+    <p class="about__pitch">{{ t('aboutSecondary') }}</p>
+
+    <!-- Meta line — 3 facts only -->
     <div class="meta">
-      <span class="meta__item meta__item--accent">{{ t('heroLabels.availableForHire') }}</span>
-      <span class="meta__sep">·</span>
       <span class="meta__item">{{ t('location') }}</span>
       <span class="meta__sep">·</span>
       <span class="meta__item">{{ t('experience') }}</span>
       <span class="meta__sep">·</span>
       <span class="meta__item">40+ {{ t('heroStats.projects') }}</span>
-      <span class="meta__sep">·</span>
-      <span class="meta__item">{{ t('heroLabels.focusVal') }}</span>
-      <span class="meta__sep">·</span>
-      <span class="meta__item">{{ t('heroLabels.langVal') }}</span>
     </div>
 
-    <!-- GitHub activity — always rendered, data fills in -->
-    <div class="activity" :class="{ 'activity--loaded': activityLoaded }">
+    <!-- GitHub activity — linked, human caption -->
+    <a
+      href="https://github.com/denis-sofonov"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="activity"
+      :class="{ 'activity--loaded': activityLoaded }"
+    >
       <div class="activity__grid">
         <div v-for="(week, wi) in activityWeeks" :key="wi" class="activity__col">
           <div
@@ -103,10 +107,10 @@ onMounted(() => {
         </div>
       </div>
       <div class="activity__info">
-        <span>{{ t('activity.label') }}</span>
-        <span>{{ activityLoaded ? `${activityTotal} ${t('activity.commits')} · ${t('activity.period')}` : '...' }}</span>
+        <span>{{ t('activity.prefix') }}</span>
+        <span class="activity__link">{{ t('activity.link') }}</span>
       </div>
-    </div>
+    </a>
   </div>
   </PageFrame>
 </template>
@@ -122,28 +126,43 @@ onMounted(() => {
   padding: 24px 20px;
   overflow: hidden;
   gap: 0;
+  position: relative;
 
   @media (max-width: 768px) { padding: 20px 8px; }
 }
 
+
 .about__statement {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: var(--fs-h3);
-  letter-spacing: var(--ls-display);
-  text-transform: uppercase;
-  line-height: 1.15;
-  margin-bottom: 20px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: clamp(22px, 2.6vw, 36px);
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  margin-bottom: 8px;
+  max-width: 46ch;
+}
+
+.about__signoff {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0 0 28px;
+  align-self: flex-end;
+  margin-right: max(8vw, 60px);
+
+  @media (max-width: 768px) {
+    align-self: center;
+    margin-right: 0;
+  }
 }
 
 .about__pitch {
-  font-family: var(--font-serif);
-  font-size: clamp(15px, 1.4vw, 19px);
-  font-style: italic;
-  line-height: 1.5;
+  font-family: var(--font-sans);
+  font-size: clamp(14px, 1.2vw, 17px);
+  line-height: 1.55;
   color: var(--muted);
-  max-width: 55ch;
-  margin-bottom: 32px;
+  max-width: 56ch;
+  margin-bottom: 24px;
 }
 
 // Meta line
@@ -156,13 +175,9 @@ onMounted(() => {
 }
 
 .meta__item {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.meta__item--accent {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
   color: var(--fg);
 }
 
@@ -172,13 +187,22 @@ onMounted(() => {
   font-size: 14px;
 }
 
-// Activity — thin strip at bottom
+// Activity — thin strip at bottom, clickable link to github
 .activity {
   display: flex;
   flex-direction: column;
   gap: 6px;
   width: 100%;
   max-width: 460px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+
+  &:hover {
+    transform: translateY(-2px);
+
+    .activity__link { color: var(--accent); }
+  }
 }
 
 .activity__grid {
@@ -212,10 +236,14 @@ onMounted(() => {
 .activity__info {
   display: flex;
   justify-content: space-between;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: var(--ls-wide);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
   color: var(--muted);
-  text-transform: uppercase;
+}
+
+.activity__link {
+  color: var(--fg);
+  transition: color 0.2s;
 }
 </style>

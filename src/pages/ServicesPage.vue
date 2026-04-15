@@ -12,143 +12,188 @@ const activeIndex = ref(0)
 
 const artEl = ref<HTMLPreElement | null>(null)
 
-// Hand-crafted ASCII art for each service (60w × ~18h)
+// Hand-crafted ASCII art for each service (~78w × 28h — big enough to play with)
 const arts = [
-  // 0 WEB APPS — landing page layout
-  `┌──────────────────────────────────────────────────────────┐
-│  o  sofonov.dev             HOME  WORK  STACK  CONTACT   │
-├──────────────────────────────────────────────────────────┤
-│                                                          │
-│    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    │
-│    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    │
-│                                                          │
-│    >  Lorem ipsum dolor sit amet consectetur             │
-│    >  Adipiscing elit sed do eiusmod tempor incididunt   │
-│    >  Ut labore et dolore magna aliqua enim ad minim     │
-│                                                          │
-│  ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐          │
-│  │ ░░░░░░ │  │ ▒▒▒▒▒▒ │  │ ▓▓▓▓▓▓ │  │ ██████ │          │
-│  │ ░░░░░░ │  │ ▒▒▒▒▒▒ │  │ ▓▓▓▓▓▓ │  │ ██████ │          │
-│  └────────┘  └────────┘  └────────┘  └────────┘          │
-│                                                          │
-├──────────────────────────────────────────────────────────┤
-│  (c) 2026                                    sofonov.dev │
-└──────────────────────────────────────────────────────────┘`,
+  // 0 WEB APPS — landing page mock: nav, hero, cards, testimonials, footer
+  `┌─────────────────────────────────────────────────────────────────────────────┐
+│  ●  sofonov.dev                      home  work  stack  about  contact      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│      ┌───────────────────────────┐                                          │
+│      │   ░░░░░░░░░░░░░░░░░░░░░░   │   We build web apps that work.          │
+│      │   ░░░░░░░░░░░░░░░░░░░░░░   │   From idea to launch — one engineer,   │
+│      │   ░░░░░░░░░░░░░░░░░░░░░░   │   full ownership, zero meetings.        │
+│      │   ░░░░░░░░░░░░░░░░░░░░░░   │                                         │
+│      └───────────────────────────┘                                          │
+│                                         [ start a project → ]   [ email ]   │
+│                                                                             │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│                                                                             │
+│   ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐            │
+│   │ ░░░░░░ │   │ ▒▒▒▒▒▒ │   │ ▓▓▓▓▓▓ │   │ ██████ │   │ ██████ │            │
+│   │ ░░░░░░ │   │ ▒▒▒▒▒▒ │   │ ▓▓▓▓▓▓ │   │ ██████ │   │ ██████ │            │
+│   │ client │   │ saas   │   │ admin  │   │ store  │   │ tool   │            │
+│   └────────┘   └────────┘   └────────┘   └────────┘   └────────┘            │
+│                                                                             │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│                                                                             │
+│   ★★★★★  "shipped fast and the code is clean"      — cto · fintech          │
+│   ★★★★★  "only engineer we trust with the stack"   — founder · saas         │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  © 2026                                                       sofonov.dev   │
+└─────────────────────────────────────────────────────────────────────────────┘`,
 
-  // 1 FRONTEND — Vue SFC structure
+  // 1 FRONTEND — compact Vue SFC
   [
-    '// src/App.vue',
+    '// src/pages/HomePage.vue ──────────────────────────────────────────────',
     '',
     '<script setup lang="ts">',
-    "  import { ref, computed, onMounted } from 'vue'",
+    "  import { ref, computed } from 'vue'",
+    "  import { useI18n } from 'vue-i18n'",
     "  import { useRouter } from 'vue-router'",
-    "  import Hero from './components/Hero.vue'",
-    "  import Sections from './components/Sections.vue'",
     '',
-    '  const router = useRouter()',
-    "  const state = ref({ active: 0, theme: 'dark' })",
-    '  const route = computed(() => router.currentRoute.value)',
+    "  import Hero from '@/components/Hero.vue'",
+    "  import Sections from '@/components/Sections.vue'",
+    "  import { useReveal } from '@/composables/useReveal'",
+    '',
+    '  const { t } = useI18n()',
+    "  const state = ref({ active: 0, theme: 'light' as const })",
+    '',
+    '  const sections = computed(() => [',
+    "    { id: 'web',     label: t('nav.web')     },",
+    "    { id: 'backend', label: t('nav.backend') },",
+    '  ])',
+    '',
+    "  useReveal('.reveal', { y: 24, stagger: 0.04 })",
     '<\/script>',
     '',
-    '<template>',
-    '  <Hero :data="state" @select="onSelect" />',
-    '  <Sections v-for="s in services" :key="s.id" />',
-    '  <Footer :year="2026" author="sofonov.dev" />',
-    '<\/template>',
-    '',
-    '// 42 components  ·  2.1kb gzipped  ·  0 lint errors',
+    '// 68 components  ·  3.1kb gzipped  ·  100% typed  ·  0 lint errors',
   ].join('\n'),
 
-  // 2 BACKEND & API — requests + queries
-  `┌─ API ────────────────────────────────────────────────────┐
-│  GET    /api/v1/users                              200   │
-│  POST   /api/v1/auth/login                         201   │
-│  PUT    /api/v1/profile/:id                        200   │
-│  PATCH  /api/v1/settings                           200   │
-│  DEL    /api/v1/session                            204   │
-└──────────────────────────────────────────────────────────┘
+  // 2 BACKEND & API — compact endpoints + SQL + stats
+  `┌─ api.sofonov.dev ───────────────────────────────────────────────────────────┐
+│  GET    /api/v1/users                                             200  14ms │
+│  POST   /api/v1/auth/login                                        201  22ms │
+│  POST   /api/v1/auth/refresh                                      200   8ms │
+│  PUT    /api/v1/profile/:id                                       200  11ms │
+│  PATCH  /api/v1/settings                                          200   6ms │
+│  DEL    /api/v1/session                                           204   2ms │
+│  GET    /api/v1/projects/:id/stats                                200  47ms │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-  > SELECT u.id, u.name, u.email, p.avatar
+  > SELECT u.id, u.name, u.email, p.avatar, r.role
       FROM users u
-      LEFT JOIN profiles p ON p.user_id = u.id
-      WHERE u.active = true
-        AND u.created_at > NOW() - INTERVAL '7 days'
-      ORDER BY u.created_at DESC
-      LIMIT 50;
+      LEFT JOIN profiles  p ON p.user_id = u.id
+      LEFT JOIN user_role r ON r.user_id = u.id
+     WHERE u.active = true AND u.created_at > NOW() - INTERVAL '7 days'
+     ORDER BY u.created_at DESC LIMIT 50;
 
-  > rows: 1428    time: 12ms    cache: HIT
-  > pool: 8 / 20  uptime: 34d  load: 0.34`,
+  > rows: 1428   time: 12ms    cache: HIT        pool: 8 / 20
+  > req/s: 342   p99: 140ms    uptime: 34d       redis: ok   pg: ok`,
 
-  // 3 ARCHITECTURE — project tree
+  // 3 ARCHITECTURE — compact tree with inline branches
   `sofonov.dev/
 ├── src/
 │   ├── api/
-│   │   ├── routes/
-│   │   │   ├── users.ts
-│   │   │   ├── auth.ts
-│   │   │   └── webhooks.ts
-│   │   └── middleware/
+│   │   ├── routes/         →  users.ts  auth.ts  projects.ts  webhooks.ts
+│   │   ├── middleware/     →  auth.ts  rate-limit.ts  error.ts
+│   │   └── db/             →  schema.prisma  migrations/
 │   ├── ui/
-│   │   ├── components/
-│   │   │   ├── Button.vue
-│   │   │   └── Modal.vue
-│   │   └── pages/
-│   ├── core/
-│   │   ├── store.ts
-│   │   └── router.ts
-│   └── utils/
+│   │   ├── components/     →  Button.vue  Modal.vue  Input.vue  Card.vue
+│   │   ├── pages/          →  HomePage.vue  AboutPage.vue  ServicesPage.vue
+│   │   └── composables/    →  useReveal.ts  useTheme.ts  useI18n.ts
+│   ├── core/               →  store.ts  router.ts  config.ts
+│   └── utils/              →  format.ts  guards.ts  types.ts
 ├── tests/
-└── docs/`,
+│   ├── unit/               →  142 tests   ·   1.8s
+│   ├── integration/        →   48 tests   ·  11.4s
+│   └── e2e/                →   18 tests   ·  42.1s
+├── docs/                   →  guide.md  api.md  architecture.md
+├── scripts/                →  deploy.sh  migrate.sh  seed.ts
+└── package.json            →  68 deps  ·  12 devDeps  ·  pnpm@9`,
 
-  // 4 SUPPORT & REVIEW — commit log + tests
-  `commit 4a7f3e1  ·  refactor/auth
-──────────────────────────────────────────────────────────
-+  fixed memory leak in worker thread pool
-+  cached db queries (2.4s → 180ms, -92%)
-+  added retry logic with exponential backoff
+  // 4 SUPPORT & REVIEW — commits + tests + perf deltas
+  `commit  4a7f3e1  ·  refactor/auth-middleware  ·  denis sofonov
+──────────────────────────────────────────────────────────────────────────────
++  fixed memory leak in worker thread pool (32 → 4 mb / req)
++  cached db queries via dataloader (2.4s → 180ms, -92%)
++  added retry logic with exponential backoff + jitter
 +  improved error boundaries across component tree
--  removed legacy polyfill (bundle -3.2kb)
--  deprecated v1 endpoints, returning 410 Gone
-~  refactored auth middleware to JWT + refresh
-~  migrated Redis 5 → Redis 7 cluster
++  new: /api/v2/projects with cursor-based pagination
+-  removed legacy polyfill for IE11 (bundle -3.2kb gzipped)
+-  deprecated v1 endpoints, returning 410 Gone after 30d window
+~  refactored auth middleware to JWT + refresh rotation
+~  migrated redis 5 → redis 7 cluster (3 nodes, HA)
+~  upgraded node 18 → 20, pnpm 8 → 9, vite 5 → 6
 
 tests/
-  >  142 / 142   unit          passing
-  >  48  /  48   integration   passing
-  >  12  /  12   e2e           passing
-  >  coverage               98.4%  statements
-  >  coverage               94.2%  branches`,
+  >  238 / 238   unit            passing   ·  1.8s
+  >   64 /  64   integration     passing   ·  11.4s
+  >   18 /  18   e2e  (playwright)         passing   ·  42.1s
+  >  coverage                  98.6%  statements  · 95.1% branches
+  >  lighthouse                  98 perf  ·  100 a11y  ·  100 seo
+  >  bundle                     142 kb gzipped (main) · +2.1% vs main
 
-  // 5 UI/UX & DESIGN — geometric composition
-  `     ◯────◉────◯────◯────◯────◯────◯────◯
+  $ deploy staging → production   [█████████████████████████]   100%`,
 
-   ▁▂▃▄▅▆▇█▇▆▅▄▃▂▁▂▃▄▅▆▇█▇▆▅▄▃▂▁▂▃▄▅▆▇█▇▆▅▄▃▂▁
+  // 5 UI/UX & DESIGN — geometric composition, grids, tokens
+  `      ● ─── ○ ─── ○ ─── ○ ─── ○ ─── ○ ─── ○ ─── ○ ─── ○ ─── ○
 
-       ╱╲        ╱╲        ╱╲        ╱╲
-      ╱  ╲      ╱  ╲      ╱  ╲      ╱  ╲
-     ╱    ╲    ╱    ╲    ╱    ╲    ╱    ╲
-    ╱      ╲  ╱      ╲  ╱      ╲  ╱      ╲
-   ╱        ╲╱        ╲╱        ╲╱        ╲
+   ▁▂▃▄▅▆▇█▇▆▅▄▃▂▁▂▃▄▅▆▇█▇▆▅▄▃▂▁▂▃▄▅▆▇█▇▆▅▄▃▂▁▂▃▄▅▆▇█▇▆▅▄▃▂▁▂▃▄▅▆▇█▇
 
-       ■    ▪    ·    ▫    □    ▣    ◆    ◇
+       ╱╲        ╱╲        ╱╲        ╱╲        ╱╲        ╱╲
+      ╱  ╲      ╱  ╲      ╱  ╲      ╱  ╲      ╱  ╲      ╱  ╲
+     ╱    ╲    ╱    ╲    ╱    ╲    ╱    ╲    ╱    ╲    ╱    ╲
+    ╱      ╲  ╱      ╲  ╱      ╲  ╱      ╲  ╱      ╲  ╱      ╲
+   ╱        ╲╱        ╲╱        ╲╱        ╲╱        ╲╱        ╲
 
-   ┌──┐    ┌──┐    ┌──┐    ┌──┐    ┌──┐    ┌──┐
-   │░░│    │▒▒│    │▓▓│    │██│    │▓▓│    │▒▒│
-   └──┘    └──┘    └──┘    └──┘    └──┘    └──┘
+        ■    ▪    ·    ▫    □    ▣    ◆    ◇    ◈    ◉    ○
 
-   type: grid · gap: 24  · cols: 6 · span: auto`,
+   ┌──┐   ┌──┐   ┌──┐   ┌──┐   ┌──┐   ┌──┐   ┌──┐   ┌──┐   ┌──┐
+   │░░│   │▒▒│   │▓▓│   │██│   │▓▓│   │▒▒│   │░░│   │  │   │  │
+   └──┘   └──┘   └──┘   └──┘   └──┘   └──┘   └──┘   └──┘   └──┘
+
+   ░ ░ ░ ░ ░ ░ ░   ▒ ▒ ▒ ▒ ▒ ▒ ▒   ▓ ▓ ▓ ▓ ▓ ▓ ▓   █ █ █ █ █ █ █
+
+   tokens:  --bg #f5f5f0  ·  --fg #0a0a0a  ·  --accent #d9211f
+   grid:    12 cols · 32 gap · 1280 max · 8px base · 1.5x ratio
+   font:    onest · space mono  ·  16→170px  ·  letter-spacing -0.02em
+   motion:  cubic-bezier(0.22, 1, 0.36, 1)  ·  180–420ms`,
 ]
 
 const currentName = computed(() => items.value[activeIndex.value]?.name ?? '')
 const currentDesc = computed(() => items.value[activeIndex.value]?.desc ?? '')
 const currentArt = computed(() => arts[activeIndex.value] ?? '')
-const currentNum = computed(() => String(activeIndex.value + 1).padStart(2, '0'))
-const totalNum = computed(() => String(items.value.length).padStart(2, '0'))
 
 const SCRAMBLE_CHARS = '!<>-_\\/[]{}=+*^?#$%&@01░▒▓█'
 
+// Cache of span DOM refs + targets + geometric centers (for cursor hit-testing)
+interface SpanInfo { el: HTMLElement; target: string; cx: number; cy: number }
+let spanCache: SpanInfo[] = []
+let currentSpot: HTMLElement | null = null
+
+function cacheSpanRects() {
+  if (!artEl.value) return
+  const wrapRect = artEl.value.getBoundingClientRect()
+  const cells = artEl.value.querySelectorAll<HTMLElement>('.ascii-char')
+  spanCache = Array.from(cells).map(el => {
+    const r = el.getBoundingClientRect()
+    return {
+      el,
+      target: el.textContent ?? '',
+      cx: r.left - wrapRect.left + r.width / 2,
+      cy: r.top - wrapRect.top + r.height / 2,
+    }
+  })
+}
+
 function scrambleArt() {
   if (!artEl.value) return
+  // Drop any active spotlight from prior art
+  currentSpot?.classList.remove('ascii-char--spot')
+  currentSpot = null
+
   const targetText = currentArt.value
   const lines = targetText.split('\n')
 
@@ -184,40 +229,98 @@ function scrambleArt() {
         if (obj.f < startFrame) {
           s.el.textContent = isSpace ? s.target : ''
           s.el.style.opacity = '0'
+          s.el.classList.remove('ascii-char--scrambling')
         } else if (obj.f < endFrame && !isSpace) {
           s.el.style.opacity = '1'
           s.el.textContent = SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)]
+          s.el.classList.add('ascii-char--scrambling')
         } else {
           s.el.style.opacity = '1'
           s.el.textContent = s.target
+          s.el.classList.remove('ascii-char--scrambling')
         }
       },
     })
   })
+
+  // After scramble settles — cache rects for cursor interaction
+  setTimeout(() => {
+    cacheSpanRects()
+  }, (totalFrames / 60) * 1000 + 50)
 }
 
-// Continuous glitch: flicker random cells
-let glitchTimer: ReturnType<typeof setInterval> | null = null
-function startGlitch() {
-  glitchTimer = setInterval(() => {
+// 2. Wandering spotlight — one red char jumps neighbor-to-neighbor
+let spotTimer: ReturnType<typeof setInterval> | null = null
+function startSpotlight() {
+  spotTimer = setInterval(() => {
     if (!artEl.value) return
     const cells = artEl.value.querySelectorAll<HTMLElement>('.ascii-char')
     if (!cells.length) return
-    const count = 1 + Math.floor(Math.random() * 2)
-    for (let i = 0; i < count; i++) {
-      const idx = Math.floor(Math.random() * cells.length)
-      const cell = cells[idx]
-      const original = cell.textContent ?? ''
-      if (original.trim() === '') continue
-      cell.textContent = SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)]
-      cell.classList.add('ascii-char--flicker')
-      setTimeout(() => {
-        cell.textContent = original
-        cell.classList.remove('ascii-char--flicker')
-      }, 90 + Math.random() * 120)
+    currentSpot?.classList.remove('ascii-char--spot')
+    // Prefer neighbors of current spot for continuity; fallback to random
+    let next: HTMLElement | null = null
+    if (currentSpot) {
+      const idx = Array.from(cells).indexOf(currentSpot)
+      if (idx >= 0) {
+        for (let tries = 0; tries < 6; tries++) {
+          const offset = [-1, 1, -60, 60, -61, -59, 59, 61][Math.floor(Math.random() * 8)]
+          const candidate = cells[idx + offset]
+          if (candidate && (candidate.textContent ?? '').trim() !== '') {
+            next = candidate
+            break
+          }
+        }
+      }
     }
-  }, 700)
+    if (!next) {
+      for (let tries = 0; tries < 20; tries++) {
+        const candidate = cells[Math.floor(Math.random() * cells.length)]
+        if ((candidate.textContent ?? '').trim() !== '') { next = candidate; break }
+      }
+    }
+    if (next) {
+      next.classList.add('ascii-char--spot')
+      currentSpot = next
+    }
+  }, 280)
 }
+
+// 1. Cursor interaction — chars near mouse briefly scramble + red
+let mouseX = -9999
+let mouseY = -9999
+let cursorRaf = 0
+const activeGlitchSpans = new Set<HTMLElement>()
+
+function onAsciiMouseMove(e: MouseEvent) {
+  if (!artEl.value) return
+  const rect = artEl.value.getBoundingClientRect()
+  mouseX = e.clientX - rect.left
+  mouseY = e.clientY - rect.top
+}
+function onAsciiMouseLeave() { mouseX = -9999; mouseY = -9999 }
+
+function cursorLoop() {
+  cursorRaf = requestAnimationFrame(cursorLoop)
+  if (mouseX < -999 || !spanCache.length) return
+  const RADIUS = 42
+  for (const span of spanCache) {
+    if (span.target.trim() === '' || activeGlitchSpans.has(span.el)) continue
+    const dx = span.cx - mouseX
+    const dy = span.cy - mouseY
+    if (dx * dx + dy * dy < RADIUS * RADIUS) {
+      activeGlitchSpans.add(span.el)
+      span.el.classList.add('ascii-char--cursor-glitch')
+      span.el.textContent = SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)]
+      const revertIn = 140 + Math.random() * 180
+      setTimeout(() => {
+        span.el.textContent = span.target
+        span.el.classList.remove('ascii-char--cursor-glitch')
+        activeGlitchSpans.delete(span.el)
+      }, revertIn)
+    }
+  }
+}
+
 
 function setActive(i: number) {
   if (i === activeIndex.value) return
@@ -240,51 +343,74 @@ function onKeydown(e: KeyboardEvent) {
   setActive((activeIndex.value + step + len) % len)
 }
 
+// Wheel scroll — switch active stage vertically
+let lastWheelAt = 0
+const WHEEL_COOLDOWN = 500
+function onWheelNav(e: WheelEvent) {
+  const absX = Math.abs(e.deltaX)
+  const absY = Math.abs(e.deltaY)
+  if (absY < 20 || absY < absX) return
+  const now = Date.now()
+  if (now - lastWheelAt < WHEEL_COOLDOWN) { e.preventDefault(); return }
+  lastWheelAt = now
+  const step = e.deltaY > 0 ? 1 : -1
+  const len = items.value.length
+  if (len) setActive((activeIndex.value + step + len) % len)
+  e.preventDefault()
+}
+
 onMounted(() => {
   nextTick(() => {
     scrambleArt()
-    startGlitch()
+    startSpotlight()
+    // Soft opacity stagger for text & list items
+    gsap.from('.services__item', { opacity: 0, stagger: 0.04, duration: 0.4, ease: 'power2.out', delay: 0.1 })
+    gsap.from('.stage__name', { opacity: 0, duration: 0.5, ease: 'power2.out', delay: 0.2 })
+    gsap.from('.stage__desc', { opacity: 0, duration: 0.5, ease: 'power2.out', delay: 0.35 })
   })
   window.addEventListener('keydown', onKeydown)
+  window.addEventListener('resize', cacheSpanRects)
+  window.addEventListener('wheel', onWheelNav, { passive: false })
+  if (artEl.value) {
+    artEl.value.addEventListener('mousemove', onAsciiMouseMove, { passive: true })
+    artEl.value.addEventListener('mouseleave', onAsciiMouseLeave)
+  }
+  cursorRaf = requestAnimationFrame(cursorLoop)
 })
 
 onUnmounted(() => {
-  if (glitchTimer) clearInterval(glitchTimer)
+  if (spotTimer) clearInterval(spotTimer)
+  if (cursorRaf) cancelAnimationFrame(cursorRaf)
   window.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('resize', cacheSpanRects)
+  window.removeEventListener('wheel', onWheelNav)
 })
 </script>
 
 <template>
-  <PageFrame num="03" :section="t('nav.services')" :subtitle="t('sections.services')" sheet="SHEET 03/08">
+  <PageFrame num="04" :section="t('nav.services')">
   <div class="services-page">
     <div class="services__grid">
       <!-- Left: list -->
       <div class="services__left">
-        <div class="services__list">
-          <button
+        <ul class="services__list">
+          <li
             v-for="(item, i) in items"
             :key="i"
             class="services__item"
             :class="{ 'services__item--active': activeIndex === i }"
             @mouseenter="setActive(i)"
             @focus="setActive(i)"
+            tabindex="0"
           >
-            <span class="services__marker"></span>
-            <span class="services__num">{{ String(i + 1).padStart(2, '0') }}</span>
-            <span class="services__name">{{ item.name }}</span>
-          </button>
-        </div>
+            {{ item.name }}
+          </li>
+        </ul>
       </div>
 
       <!-- Right: ASCII stage -->
       <div class="services__stage">
         <div class="stage__top">
-          <div class="stage__meta">
-            <span class="stage__dot"></span>
-            <span>SVC.{{ currentNum }} / {{ totalNum }}</span>
-            <span class="stage__sep">·</span>
-            <span class="stage__blink">RENDER</span>
-          </div>
           <div class="stage__name-wrap">
             <h2 class="stage__name">{{ currentName }}</h2>
           </div>
@@ -293,7 +419,6 @@ onUnmounted(() => {
 
         <div class="stage__ascii-wrap">
           <pre ref="artEl" class="stage__ascii"></pre>
-          <div class="stage__scan"></div>
         </div>
       </div>
     </div>
@@ -304,8 +429,10 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .services-page {
   flex: 1;
+  position: relative;
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 24px 20px;
 
   @media (max-width: 768px) { padding: 20px 8px; }
@@ -313,135 +440,83 @@ onUnmounted(() => {
 
 .services__grid {
   width: 100%;
-  max-width: 1400px;
+  max-width: 820px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: minmax(260px, 1fr) 2fr;
-  gap: 64px;
-  align-items: start;
+  position: relative;
 
   @media (max-width: 960px) {
-    grid-template-columns: 1fr;
-    gap: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    max-width: none;
   }
 }
 
 .services__left {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
+  position: absolute;
+  top: 0;
+  left: -280px;
+  width: 240px;
 
-.services__label {
-  font-size: 11px;
-  letter-spacing: var(--ls-meta);
-  text-transform: uppercase;
-  color: var(--muted);
-}
+  @media (max-width: 1400px) {
+    left: max(20px, calc((100vw - 820px) / 2 - 260px));
+  }
 
-.services__list {
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid var(--border);
-}
-
-.services__item {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px 0 16px 16px;
-  border: none;
-  background: none;
-  color: var(--fg);
-  font-family: inherit;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-  opacity: 0.55;
-  transition: opacity 0.4s ease, padding-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
-  &:hover, &--active {
-    opacity: 1;
-    padding-left: 26px;
+  @media (max-width: 960px) {
+    position: static;
+    left: auto;
+    width: 100%;
   }
 }
 
-.services__marker {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 8px;
-  height: 1px;
-  background: var(--fg);
-  transform: translateY(-50%) scaleX(0);
-  transform-origin: left;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
-  .services__item--active & { transform: translateY(-50%) scaleX(1); }
+.services__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.services__num {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 0.08em;
-  width: 28px;
-  flex-shrink: 0;
-}
-
-.services__name {
-  font-family: var(--font-display);
+.services__item {
+  font-family: var(--font-sans);
+  font-size: clamp(16px, 1.4vw, 20px);
   font-weight: 500;
-  font-size: var(--fs-h4);
-  letter-spacing: var(--ls-display);
-  text-transform: uppercase;
-  line-height: 1.1;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: var(--muted);
+  cursor: pointer;
+  outline: none;
+  padding: 6px 0;
+  transition: color 0.25s ease;
+
+  &:hover {
+    color: var(--fg);
+  }
+
+  &--active,
+  &--active:hover {
+    color: var(--accent);
+  }
+
+  &:focus-visible {
+    color: var(--fg);
+  }
 }
 
 // Stage
 .services__stage {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .stage__top {
   display: flex;
   flex-direction: column;
   gap: 14px;
-}
-
-.stage__meta {
-  display: flex;
   align-items: center;
-  gap: 10px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: var(--ls-chrome);
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.stage__dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--fg);
-  animation: pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.25; transform: scale(0.85); }
-  50% { opacity: 1; transform: scale(1.1); }
-}
-
-.stage__sep { opacity: 0.4; }
-.stage__blink {
-  animation: blink 1.2s steps(2) infinite;
-}
-@keyframes blink {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0.35; }
+  text-align: center;
 }
 
 .stage__name-wrap {
@@ -451,83 +526,65 @@ onUnmounted(() => {
 
 .stage__name {
   font-family: var(--font-display);
-  font-size: var(--fs-h2);
+  font-size: clamp(36px, 5vw, 64px);
   line-height: 1;
-  letter-spacing: var(--ls-display);
-  text-transform: uppercase;
+  letter-spacing: -0.02em;
   color: var(--fg);
   margin: 0;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .stage__desc {
-  font-family: var(--font-serif);
-  font-size: clamp(15px, 1.15vw, 17px);
-  font-style: italic;
+  font-family: var(--font-sans);
+  font-size: clamp(15px, 1.2vw, 17px);
   line-height: 1.55;
   color: var(--muted);
-  max-width: 560px;
-  min-height: calc(1.55em * 3);
+  max-width: 56ch;
+  min-height: calc(1.55em * 4);
+  margin: 0;
 }
 
-// ASCII
+// ASCII — no frame, no scan-line, block centered, text inside stays left-aligned (pre)
 .stage__ascii-wrap {
   position: relative;
-  border: 1px solid var(--border);
-  padding: 24px 28px;
-  background:
-    linear-gradient(var(--border), var(--border)) top left / 14px 1px no-repeat,
-    linear-gradient(var(--border), var(--border)) top left / 1px 14px no-repeat,
-    linear-gradient(var(--border), var(--border)) top right / 14px 1px no-repeat,
-    linear-gradient(var(--border), var(--border)) top right / 1px 14px no-repeat,
-    linear-gradient(var(--border), var(--border)) bottom left / 14px 1px no-repeat,
-    linear-gradient(var(--border), var(--border)) bottom left / 1px 14px no-repeat,
-    linear-gradient(var(--border), var(--border)) bottom right / 14px 1px no-repeat,
-    linear-gradient(var(--border), var(--border)) bottom right / 1px 14px no-repeat;
-  overflow: hidden;
-  min-height: 400px;
+  padding: 0;
+  min-height: 420px;
   display: flex;
+  justify-content: center;
   align-items: flex-start;
 
   @media (max-width: 768px) {
-    padding: 18px 14px;
     overflow-x: auto;
   }
 }
 
 .stage__ascii {
-  font-family: 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-  font-size: clamp(10px, 0.9vw, 13px);
+  font-family: var(--font-mono);
+  font-size: clamp(9px, 0.82vw, 12px);
   line-height: 1.35;
   color: var(--fg);
   margin: 0;
   white-space: pre;
-  min-height: calc(1.35em * 18);
+  min-height: calc(1.35em * 28);
 
   :deep(.ascii-char) {
-    display: inline;
+    display: inline-block;
+    width: 1ch;
+    text-align: center;
+    letter-spacing: 0;
     transition: color 0.15s ease;
     will-change: contents, opacity;
   }
 
-  :deep(.ascii-char--flicker) {
-    color: var(--muted);
+  :deep(.ascii-char--scrambling),
+  :deep(.ascii-char--cursor-glitch) {
+    color: var(--accent);
   }
-}
 
-.stage__scan {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--fg), transparent);
-  opacity: 0.06;
-  animation: scan 4.2s linear infinite;
-  pointer-events: none;
-}
+  :deep(.ascii-char--spot) {
+    color: var(--accent);
+    text-shadow: 0 0 6px color-mix(in srgb, var(--accent) 50%, transparent);
+  }
 
-@keyframes scan {
-  0% { top: -2%; }
-  100% { top: 102%; }
 }
 </style>

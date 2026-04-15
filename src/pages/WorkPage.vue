@@ -61,7 +61,7 @@ function onKeydown(e: KeyboardEvent) {
 </script>
 
 <template>
-  <PageFrame num="06" :section="t('nav.work')" :subtitle="t('sections.work')" sheet="SHEET 06/08">
+  <PageFrame num="03" :section="t('nav.work')">
   <div class="work-page">
     <!-- LEFT: iframe preview -->
     <div class="work__preview">
@@ -103,7 +103,7 @@ function onKeydown(e: KeyboardEvent) {
             class="work__item-link"
             @click.stop
           >
-            [ {{ t('viewLive') }} &nearr; ]
+            {{ t('viewLive') }} →
           </router-link>
         </button>
       </div>
@@ -165,7 +165,7 @@ function onKeydown(e: KeyboardEvent) {
   font-size: 12px;
   color: var(--muted);
   letter-spacing: var(--ls-wide);
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 // RIGHT — project list
@@ -188,7 +188,7 @@ function onKeydown(e: KeyboardEvent) {
 .work__label {
   font-size: 11px;
   letter-spacing: var(--ls-wide);
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--muted);
   margin-bottom: 16px;
   flex-shrink: 0;
@@ -214,7 +214,7 @@ function onKeydown(e: KeyboardEvent) {
   background: none;
   border: none;
   color: var(--fg);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   padding: 16px 0;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
@@ -250,16 +250,15 @@ function onKeydown(e: KeyboardEvent) {
 .work__item-tag {
   font-size: 9px;
   letter-spacing: var(--ls-wide);
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--muted);
 }
 
 .work__item-name {
-  font-family: var(--font-mono);
-  font-size: clamp(14px, 1.5vw, 18px);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-size: clamp(15px, 1.5vw, 20px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
   line-height: 1.2;
 }
 

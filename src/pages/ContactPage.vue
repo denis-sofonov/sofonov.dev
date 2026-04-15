@@ -13,29 +13,29 @@ const links = [
 ]
 
 onMounted(() => {
-  // Title character split
+  // Title — character-by-character opacity stagger (no flipping, no y)
   const el = document.querySelector('.contact__title')
   if (el) {
     const text = el.textContent || ''
     el.innerHTML = text.split('').map(ch =>
-      ch === ' ' ? ' ' : `<span class="contact__char-wrap"><span class="contact__char">${ch}</span></span>`
+      ch === ' ' ? ' ' : `<span class="contact__char">${ch}</span>`,
     ).join('')
-    gsap.from('.contact__char', { y: '100%', rotateX: -40, stagger: 0.025, duration: 0.6, ease: 'power3.out', delay: 0.3 })
+    gsap.from('.contact__char', { opacity: 0, stagger: 0.025, duration: 0.35, ease: 'power2.out', delay: 0.15 })
   }
 
-  gsap.from('.contact__sub', { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out', delay: 0.7 })
-  gsap.from('.contact__link', { y: 20, opacity: 0, stagger: 0.1, duration: 0.5, ease: 'power3.out', delay: 0.9 })
+  gsap.from('.contact__sub', { opacity: 0, duration: 0.4, ease: 'power2.out', delay: 0.45 })
+  gsap.from('.contact__link', { opacity: 0, stagger: 0.07, duration: 0.4, ease: 'power2.out', delay: 0.6 })
 })
 </script>
 
 <template>
-  <PageFrame num="08" :section="t('nav.contact')" :subtitle="t('sections.contact')" sheet="SHEET 08/08">
+  <PageFrame num="07" :section="t('nav.contact')">
     <div class="contact-page">
       <h1 class="contact__title">{{ t('cta.title') }}</h1>
       <p class="contact__sub">{{ t('cta.subtitle') }}</p>
       <div class="contact__links">
         <a v-for="link in links" :key="link.label" :href="link.href" target="_blank" rel="noopener noreferrer" class="contact__link magnetic">
-          [ {{ link.label }} &nearr; ]
+          {{ link.label.toLowerCase() }} <span class="contact__arrow">→</span>
         </a>
       </div>
     </div>
@@ -60,8 +60,7 @@ onMounted(() => {
   font-family: var(--font-display);
   font-weight: 500;
   font-size: var(--fs-hero);
-  letter-spacing: var(--ls-display);
-  text-transform: uppercase;
+  letter-spacing: -0.02em;
   line-height: 0.95;
   margin-bottom: 28px;
 }
@@ -90,18 +89,28 @@ onMounted(() => {
 }
 
 .contact__link {
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 500;
   text-decoration: none;
   color: var(--fg);
   border: 1px solid var(--border);
-  padding: 14px 28px;
-  letter-spacing: var(--ls-label);
-  text-transform: uppercase;
-  transition: background 0.2s, color 0.2s;
+  border-radius: 999px;
+  padding: 12px 24px;
+  letter-spacing: 0;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 
   &:hover {
-    background: var(--fg);
-    color: var(--bg);
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
   }
 }
+
+.contact__arrow {
+  transition: transform 0.2s ease;
+}
+.contact__link:hover .contact__arrow { transform: translate(2px, -2px); }
 </style>

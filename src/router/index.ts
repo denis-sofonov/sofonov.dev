@@ -6,6 +6,8 @@ import ProcessPage from '../pages/ProcessPage.vue'
 import RatesPage from '../pages/RatesPage.vue'
 import WorkPage from '../pages/WorkPage.vue'
 import StackPage from '../pages/StackPage.vue'
+import NowPage from '../pages/NowPage.vue'
+import BookmarksPage from '../pages/BookmarksPage.vue'
 import ContactPage from '../pages/ContactPage.vue'
 import Northwind from '../pages/work/Northwind.vue'
 import Lumen from '../pages/work/Lumen.vue'
@@ -16,11 +18,13 @@ export const router = createRouter({
   routes: [
     { path: '/', component: HeroPage },
     { path: '/about', component: AboutPage },
-    { path: '/services', component: ServicesPage },
-    { path: '/process', component: ProcessPage },
+    { path: '/what-i-do', component: ServicesPage },
+    { path: '/how-i-do', component: ProcessPage },
     { path: '/rates', component: RatesPage },
     { path: '/work', component: WorkPage },
-    { path: '/stack', component: StackPage },
+    { path: '/what-i-use', component: StackPage },
+    { path: '/now', component: NowPage },
+    { path: '/bookmarks', component: BookmarksPage },
     { path: '/contact', component: ContactPage },
     {
       path: '/work/northwind',

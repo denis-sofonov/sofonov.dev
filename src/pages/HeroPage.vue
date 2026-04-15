@@ -14,7 +14,7 @@ const hasVisited = sessionStorage.getItem('visited') === '1'
 const preloaderDone = ref(hasVisited)
 const preloaderCount = ref(hasVisited ? 100 : 0)
 
-function initParticleText(canvas: HTMLCanvasElement, text: string): { cleanup: () => void; resample: (newText: string) => void } {
+function initParticleText(canvas: HTMLCanvasElement, text: string, scatter: boolean = true): { cleanup: () => void; resample: (newText: string) => void } {
   const parent = canvas.parentElement!
   const ctx = canvas.getContext('2d')!
   const dpr = Math.min(window.devicePixelRatio, 2)
@@ -44,19 +44,22 @@ function initParticleText(canvas: HTMLCanvasElement, text: string): { cleanup: (
     offCanvas.height = h
     const offCtx = offCanvas.getContext('2d')!
 
-    const lines = currentText.split(' ')
-    const fontSize = Math.min(w * 0.17, 200)
-    offCtx.font = `600 ${fontSize}px "Oswald", "Bebas Neue", Impact, sans-serif`
+    const lines = currentText.split('\n')
+    const fontSize = Math.min(w * 0.14, 170)
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light'
+    offCtx.font = `700 ${fontSize}px "Unbounded", "Onest", system-ui, sans-serif`
     offCtx.fillStyle = '#fff'
     offCtx.textBaseline = 'middle'
     offCtx.textAlign = 'center'
+    void isDark
 
-    const lineHeight = fontSize * 0.95
+    const lineHeight = fontSize * 1.0
     const totalHeight = lines.length * lineHeight
-    const startY = (h - totalHeight) / 2 + lineHeight / 2
+    const opticalOffset = h * 0.04
+    const startY = (h - totalHeight) / 2 + lineHeight / 2 - opticalOffset
 
     lines.forEach((line, i) => {
-      offCtx.fillText(line.toUpperCase(), w / 2, startY + i * lineHeight)
+      offCtx.fillText(line, w / 2, startY + i * lineHeight)
     })
 
     const imageData = offCtx.getImageData(0, 0, w, h)
@@ -171,13 +174,17 @@ function initParticleText(canvas: HTMLCanvasElement, text: string): { cleanup: (
 
   sampleText()
 
-  // Scatter particles — they'll assemble into text via lerp
-  const w = parent.clientWidth, h = parent.clientHeight
-  for (const p of particles) {
-    p.x = Math.random() * w
-    p.y = Math.random() * h
-    p.vx = 0
-    p.vy = 0
+  if (scatter) {
+    // Scatter particles — they'll assemble into text via lerp
+    const w = parent.clientWidth, h = parent.clientHeight
+    for (const p of particles) {
+      p.x = Math.random() * w
+      p.y = Math.random() * h
+      p.vx = 0
+      p.vy = 0
+    }
+  } else {
+    assembleTime = 0
   }
 
   animId = requestAnimationFrame(animate)
@@ -224,10 +231,10 @@ function initParticleText(canvas: HTMLCanvasElement, text: string): { cleanup: (
 
 onMounted(async () => {
   if (hasVisited) {
-    // Skip preloader — init particles directly
+    // Skip preloader — init particles directly, no scatter (instant)
     await nextTick()
     if (particleCanvas.value) {
-      const result = initParticleText(particleCanvas.value, t('name'))
+      const result = initParticleText(particleCanvas.value, t('name'), false)
       particleCleanup = result.cleanup
       particleResample = result.resample
     }
@@ -275,12 +282,15 @@ onUnmounted(() => { particleCleanup?.() })
       </div>
     </transition>
 
-    <PageFrame v-if="preloaderDone" num="01" section="MAIN" subtitle="HERO" sheet="SHEET 01/08">
+    <PageFrame v-if="preloaderDone" :section="t('nav.main')">
       <div class="hero-page">
         <canvas ref="particleCanvas" class="hero__canvas"></canvas>
         <div class="hero__bottom">
           <div class="hero__left">
-            <span class="hero__label">[ {{ t('heroLabels.availableForHire') }} ]</span>
+            <span class="hero__label">
+              <span class="hero__dot"></span>
+              {{ t('heroLabels.availableForHire') }}
+            </span>
             <p class="hero__desc"><em>{{ t('role') }}</em></p>
           </div>
           <div class="hero__right">
@@ -383,22 +393,30 @@ onUnmounted(() => { particleCleanup?.() })
   gap: 12px;
 }
 .hero__label {
-  font-size: 11px;
-  letter-spacing: var(--ls-wide);
-  text-transform: uppercase;
-  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0;
+  color: var(--fg);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.hero__dot {
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  flex-shrink: 0;
 }
 .hero__desc {
-  font-family: var(--font-serif);
-  font-size: clamp(18px, 2.5vw, 28px);
-  font-style: italic;
+  font-family: var(--font-sans);
+  font-size: clamp(15px, 1.6vw, 20px);
+  font-weight: 500;
   color: var(--fg);
   max-width: 320px;
-  line-height: 1.3;
-  em { font-style: italic; }
+  line-height: 1.35;
+  em { font-style: normal; }
 }
 .hero__right {
-  max-width: 380px;
+  max-width: 400px;
   text-align: right;
   @media (max-width: 768px) {
     text-align: left;

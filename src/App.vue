@@ -12,7 +12,7 @@ const isStandalone = computed(() => Boolean(route.meta?.standalone))
 function getSystemTheme(): string {
   const saved = localStorage.getItem('theme')
   if (saved) return saved
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  return 'light'
 }
 
 const currentTheme = getSystemTheme()
@@ -29,13 +29,9 @@ function toggleLocale() {
   localStorage.setItem('locale', locale.value)
 }
 
-const isGlitching = ref(false)
-
 function toggleTheme() {
   isDark.value = !isDark.value
   const theme = isDark.value ? 'dark' : 'light'
-  isGlitching.value = true
-  setTimeout(() => { isGlitching.value = false }, 300)
   document.documentElement.setAttribute('data-theme', theme)
   localStorage.setItem('theme', theme)
 }
@@ -74,7 +70,7 @@ onMounted(() => {
   function animate() {
     cx += (tx - cx) * 0.12
     cy += (ty - cy) * 0.12
-    cursor.style.transform = `translate(${cx - 10}px, ${cy - 10}px)`
+    cursor.style.transform = `translate(${cx - 14}px, ${cy - 14}px)`
     requestAnimationFrame(animate)
   }
   animate()
@@ -84,11 +80,11 @@ onMounted(() => {
 const navLinks = computed(() => [
   { path: '/', label: t('nav.main') },
   { path: '/about', label: t('nav.about') },
-  { path: '/services', label: t('nav.services') },
-  { path: '/process', label: t('nav.process') },
-  { path: '/rates', label: t('nav.rates') },
-  { path: '/work', label: t('nav.work') },
-  { path: '/stack', label: t('nav.stack') },
+  { path: '/what-i-do', label: t('nav.services') },
+  { path: '/how-i-do', label: t('nav.process') },
+  { path: '/what-i-use', label: t('nav.stack') },
+  { path: '/now', label: t('nav.now') },
+  { path: '/bookmarks', label: t('nav.bookmarks') },
   { path: '/contact', label: t('nav.contact') },
 ])
 
@@ -133,7 +129,7 @@ onMounted(() => {
   <RouterView v-if="isStandalone" />
 
   <!-- Main portfolio site -->
-  <div v-else class="page" :class="{ 'page--glitching': isGlitching }">
+  <div v-else class="page">
     <Teleport to="body">
       <div ref="cursorEl" class="cursor"></div>
     </Teleport>
@@ -145,10 +141,10 @@ onMounted(() => {
           v-for="link in navLinks"
           :key="link.path"
           :to="link.path"
-          class="header__nav-link magnetic"
+          class="header__nav-link"
           :class="{ 'header__nav-link--active': route.path === link.path }"
         >
-          [ {{ link.label }} ]
+          {{ link.label }}
         </RouterLink>
       </nav>
       <div class="header__controls">
@@ -162,7 +158,7 @@ onMounted(() => {
     </header>
 
     <router-view v-slot="{ Component }">
-      <transition name="page" mode="out-in" :duration="{ enter: 400, leave: 300 }">
+      <transition name="page" mode="out-in" :duration="{ enter: 450, leave: 300 }">
         <component :is="Component" :key="route.path" />
       </transition>
     </router-view>

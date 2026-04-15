@@ -1,63 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-
 interface Props {
-  num: string
+  num?: string
   section: string
   subtitle?: string
-  sheet?: string
-  rev?: string
 }
 
 defineProps<Props>()
-
-const time = ref('')
-let timer: ReturnType<typeof setInterval> | null = null
-
-const timeFormatter = new Intl.DateTimeFormat('en-GB', {
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-  timeZoneName: 'short',
-})
-function updateTime() {
-  time.value = timeFormatter.format(new Date())
-}
-
-onMounted(() => {
-  updateTime()
-  const msToNextMinute = 60000 - (Date.now() % 60000)
-  setTimeout(() => {
-    updateTime()
-    timer = setInterval(updateTime, 60000)
-  }, msToNextMinute)
-})
-
-onUnmounted(() => {
-  if (timer) clearInterval(timer)
-})
 </script>
 
 <template>
   <section class="pf">
     <div class="pf__inner">
-      <span class="pf__mark pf__mark--tl"></span>
-      <span class="pf__mark pf__mark--tr"></span>
-      <span class="pf__mark pf__mark--bl"></span>
-      <span class="pf__mark pf__mark--br"></span>
-
-      <header class="pf__top">
-        <span class="pf__label">
-          [ {{ num }} · {{ section }}<template v-if="subtitle"> — {{ subtitle }}</template> ]
-        </span>
-        <div class="pf__meta">
-          <span>{{ sheet || `SHEET ${num}` }}</span>
-          <span class="pf__meta-sep">·</span>
-          <span>{{ rev || 'REV A · 2026' }}</span>
-          <span class="pf__meta-sep">·</span>
-          <span class="pf__time">{{ time }}</span>
-        </div>
-      </header>
+      <div class="pf__corner pf__corner--tl">
+        <span class="pf__section">{{ section.toLowerCase() }}<template v-if="subtitle"> <em>— {{ subtitle }}</em></template></span>
+      </div>
 
       <div class="pf__body">
         <slot />
@@ -68,12 +24,16 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .pf {
-  min-height: 100vh;
-  min-height: 100svh;
+  height: 100vh;
+  height: 100svh;
   padding: 56px 20px 20px;
   display: flex;
+  overflow: hidden;
 
   @media (max-width: 768px) {
+    height: auto;
+    min-height: 100svh;
+    overflow: visible;
     padding: 52px 10px 10px;
   }
 }
@@ -83,83 +43,42 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  border: 1px solid var(--border);
-  padding: 16px 28px 20px;
   min-height: 0;
-
-  @media (max-width: 768px) { padding: 14px 14px 16px; }
-}
-
-// Registration marks
-.pf__mark {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  pointer-events: none;
-  z-index: 3;
-
-  &::before, &::after {
-    content: '';
-    position: absolute;
-    background: var(--fg);
-  }
-
-  &--tl { top: -1px; left: -1px;
-    &::before { top: 0; left: 0; width: 1px; height: 100%; }
-    &::after  { top: 0; left: 0; width: 100%; height: 1px; }
-  }
-  &--tr { top: -1px; right: -1px;
-    &::before { top: 0; right: 0; width: 1px; height: 100%; }
-    &::after  { top: 0; right: 0; width: 100%; height: 1px; }
-  }
-  &--bl { bottom: -1px; left: -1px;
-    &::before { bottom: 0; left: 0; width: 1px; height: 100%; }
-    &::after  { bottom: 0; left: 0; width: 100%; height: 1px; }
-  }
-  &--br { bottom: -1px; right: -1px;
-    &::before { bottom: 0; right: 0; width: 1px; height: 100%; }
-    &::after  { bottom: 0; right: 0; width: 100%; height: 1px; }
-  }
-}
-
-.pf__top {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 14px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: var(--ls-chrome);
-  text-transform: uppercase;
-  color: var(--muted);
-  flex-shrink: 0;
-  z-index: 2;
-}
-
-.pf__label {
-  color: var(--fg);
-  white-space: nowrap;
+  padding: 34px 32px 34px;
   overflow: hidden;
-  text-overflow: ellipsis;
+
+  @media (max-width: 768px) {
+    overflow: visible;
+    padding: 30px 14px 30px;
+  }
 }
 
-.pf__meta {
+// Corner meta — minimal chrome, no border, no registration marks
+.pf__corner {
+  position: absolute;
+  z-index: 2;
   display: flex;
-  gap: 10px;
-  align-items: baseline;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
   color: var(--muted);
   white-space: nowrap;
-  flex-shrink: 0;
+  pointer-events: none;
 }
 
-.pf__meta-sep { opacity: 0.4; }
+.pf__corner > * { pointer-events: auto; }
 
-.pf__time {
-  font-variant-numeric: tabular-nums;
+.pf__corner--tl { top: 14px; left: 26px; }
+
+@media (max-width: 768px) {
+  .pf__corner--tl { left: 14px; top: 10px; }
+}
+
+.pf__section {
   color: var(--fg);
+  em { font-style: normal; color: var(--muted); font-weight: 400; }
 }
 
 .pf__body {
