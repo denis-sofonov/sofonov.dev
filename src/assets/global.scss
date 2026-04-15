@@ -1,5 +1,5 @@
 // ==========================================
-// GLOBAL RESET — applies to everything
+// RESET
 // ==========================================
 *, *::before, *::after {
   margin: 0;
@@ -16,325 +16,230 @@ body {
 }
 
 // ==========================================
-// BRUTALIST STYLES — scoped to .page only
-// Pet projects (standalone routes) are NOT affected
+// DESIGN SYSTEM — Monochrome Editorial
 // ==========================================
 .page {
-  --bg: #faf7f0;
-  --fg: #0a0805;
-  --accent: #FF5C00;
-  --accent-soft: #FF8A40;
-  --border: #0a0805;
-  --border-subtle: #beb5a3;
-  --muted: #847a6a;
-  --font: 'Space Mono', monospace;
-  --font-serif: 'Instrument Serif', 'Times New Roman', Georgia, serif;
+  --bg: #0a0a0a;
+  --fg: #ececec;
+  --muted: #9a9a9a;
+  --border: rgba(255, 255, 255, 0.16);
+
+  --font-display: 'Oswald', Impact, 'Arial Narrow', sans-serif;
+  --font-serif: 'PT Serif', Georgia, serif;
+  --font-mono: 'Space Mono', monospace;
+
+  // Letter-spacing tokens
+  --ls-display: 0.02em;  // display headings
+  --ls-label:   0.06em;  // nav, buttons, inline labels
+  --ls-wide:    0.1em;   // uppercase badges / muted labels
+  --ls-meta:    0.14em;  // mono meta (SHEET, FIG)
+  --ls-chrome:  0.16em;  // frame chrome labels
+
+  // Heading size tokens
+  --fs-hero: clamp(56px, 12vw, 160px);
+  --fs-h1:   clamp(48px, 8vw, 120px);
+  --fs-h2:   clamp(32px, 5vw, 72px);
+  --fs-h3:   clamp(24px, 2.8vw, 40px);
+  --fs-h4:   clamp(18px, 2.2vw, 24px);
 
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--bg);
   color: var(--fg);
-  font-family: var(--font);
-  -webkit-font-smoothing: auto;
-  cursor: crosshair;
+  font-family: var(--font-mono);
+  -webkit-font-smoothing: antialiased;
+  cursor: none;
 
-  *, *::before, *::after {
-    border-radius: 0 !important;
-  }
+  a, button { font-family: var(--font-mono); cursor: none; }
 
-  a, button {
-    cursor: crosshair;
-    font-family: var(--font);
+  @media (max-width: 768px) {
+    cursor: auto;
+    a, button { cursor: pointer; }
   }
-
-  ::selection {
-    background: var(--fg);
-    color: var(--bg);
-  }
+  ::selection { background: var(--fg); color: var(--bg); }
 }
 
-:root[data-theme='dark'] .page {
-  --bg: #0a0805;
-  --fg: #faf7f0;
-  --accent: #FF7A2E;
-  --accent-soft: #CC5500;
-  --border: #faf7f0;
-  --border-subtle: #2a241b;
-  --muted: #948a78;
+:root[data-theme='light'] .page {
+  --bg: #f5f5f0;
+  --fg: #0a0a0a;
+  --muted: #5e5e5e;
+  --border: rgba(0, 0, 0, 0.16);
 }
 
-// Brutalist scrollbar — only when on main brutalist page
+// Scrollbar
 body:has(.page) {
-  &::-webkit-scrollbar {
-    width: 10px;
-    background: var(--bg, #fff);
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--fg, #000);
-    border: 2px solid var(--bg, #fff);
-  }
+  &::-webkit-scrollbar { width: 0; }
 }
 
+// ==========================================
 // HEADER
+// ==========================================
 .header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 100;
-  padding: 0;
+  height: 48px;
+  padding: 0 32px;
   display: flex;
   justify-content: space-between;
-  align-items: stretch;
-  background: var(--bg);
-  border-bottom: 2px solid var(--border);
+  align-items: center;
+  mix-blend-mode: difference;
 }
 
 .header__logo {
-  font-size: 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--bg);
-  background: var(--fg);
-  padding: 12px 20px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  border-right: 2px solid var(--border);
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-decoration: none;
+}
 
-  &:hover {
-    background: var(--accent);
+.header__nav {
+  display: flex;
+  gap: 4px;
+
+  @media (max-width: 768px) {
+    display: none;
   }
+}
+
+.header__nav-link {
+  font-size: 11px;
+  font-weight: 400;
+  color: #fff;
+  text-decoration: none;
+  padding: 6px 12px;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  transition: opacity 0.2s;
+  opacity: 0.6;
+
+  &:hover { opacity: 1; }
+  &--active { opacity: 1; font-weight: 700; }
 }
 
 .header__controls {
   display: flex;
+  gap: 4px;
 }
 
 .header__btn {
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-weight: 400;
   background: transparent;
-  color: var(--fg);
+  color: #fff;
   border: none;
-  border-left: 2px solid var(--border);
-  padding: 12px 20px;
-  transition: none;
+  padding: 6px 12px;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  transition: opacity 0.2s;
 
-  &:hover {
-    background: var(--fg);
-    color: var(--bg);
-  }
-
-  &:active {
-    background: var(--accent);
-    color: #fff;
-  }
+  &:hover { opacity: 0.5; }
 }
 
+// ==========================================
 // FOOTER
+// ==========================================
 .footer {
-  padding: 16px 24px;
+  padding: 24px 32px;
   font-size: 11px;
-  letter-spacing: 0.05em;
   color: var(--muted);
-  border-top: 2px solid var(--border);
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
+  border-top: 1px solid var(--border);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 
   @media (max-width: 768px) {
-    padding: 12px 16px;
+    padding: 20px 16px;
     flex-direction: column;
   }
 }
 
-// Serif italic accent for year — typographic mix
 .footer__year {
-  font-family: var(--font-serif);
-  font-size: 16px;
-  letter-spacing: 0;
   color: var(--fg);
-  text-transform: none;
-
-  em {
-    color: var(--accent);
-    font-style: italic;
-  }
+  em { font-style: italic; font-family: var(--font-serif); }
 }
 
-// Underlined hyperlink — canonical brutalist signal
 .footer__link {
-  color: var(--fg);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-  transition: none;
-
-  &:hover {
-    color: var(--accent);
-    text-decoration-color: var(--accent);
-  }
-
-  &:visited {
-    color: var(--muted);
-  }
+  color: var(--muted);
+  text-decoration: none;
+  &:hover { color: var(--fg); }
 }
 
-// SECTION TITLE
-.section-title {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  padding: 12px 24px;
-  border-bottom: 2px solid var(--border);
-  background: var(--fg);
-  color: var(--bg);
-
-  @media (max-width: 768px) {
-    padding: 10px 16px;
-  }
-}
-
-// ANIMATIONS — only structural, no fading
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
+// ==========================================
+// ANIMATIONS
+// ==========================================
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
 
-// Glitch — clip-path slices for chromatic aberration
-@keyframes brutGlitch {
-  0%, 100% {
-    clip-path: inset(0 0 0 0);
-    transform: translate(0);
-  }
-  5% {
-    clip-path: inset(20% 0 60% 0);
-    transform: translate(-3px, -1px);
-  }
-  10% {
-    clip-path: inset(50% 0 20% 0);
-    transform: translate(3px, 1px);
-  }
-  15% {
-    clip-path: inset(10% 0 70% 0);
-    transform: translate(-2px, 2px);
-  }
-  20%, 100% {
-    clip-path: inset(0 0 0 0);
-    transform: translate(0);
-  }
+// Custom cursor
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform;
+
+  @media (max-width: 768px) { display: none; }
 }
 
-@keyframes brutGlitch2 {
-  0%, 100% {
-    clip-path: inset(0 0 0 0);
-    transform: translate(0);
-  }
-  5% {
-    clip-path: inset(60% 0 10% 0);
-    transform: translate(3px, 2px);
-  }
-  10% {
-    clip-path: inset(30% 0 40% 0);
-    transform: translate(-3px, -1px);
-  }
-  15% {
-    clip-path: inset(70% 0 5% 0);
-    transform: translate(2px, -2px);
-  }
-  20%, 100% {
-    clip-path: inset(0 0 0 0);
-    transform: translate(0);
-  }
+:root[data-theme='light'] .cursor {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1.5px solid #0a0a0a;
 }
 
-// Theme switch glitch — brief distortion when toggling
-@keyframes brutThemeGlitch {
-  0% { filter: none; transform: translate(0); }
-  20% { filter: hue-rotate(-30deg) contrast(1.4); transform: translate(-3px, 1px); }
-  40% { filter: invert(0.05) hue-rotate(15deg); transform: translate(2px, -2px); }
-  60% { filter: contrast(1.2); transform: translate(-1px, 2px); }
-  80% { filter: hue-rotate(10deg); transform: translate(1px, 0); }
-  100% { filter: none; transform: translate(0); }
+:root[data-theme='dark'] .cursor {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1.5px solid #e8e8e8;
+}
+
+// Magnetic elements
+.magnetic {
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+// Page transitions
+.page-enter-active {
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+              filter 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.page-leave-active {
+  transition: opacity 0.3s cubic-bezier(0.76, 0, 0.24, 1),
+              transform 0.3s cubic-bezier(0.76, 0, 0.24, 1),
+              filter 0.3s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(40px) scale(0.985);
+  filter: blur(6px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-24px) scale(1.01);
+  filter: blur(4px);
 }
 
 .page--glitching {
-  animation: brutThemeGlitch 0.45s steps(8) both;
+  animation: themeFlash 0.2s ease both;
 }
 
-// Brutalist HR — visible structural divider
-hr.brut-divider {
-  border: none;
-  border-top: 4px solid var(--fg);
-  margin: 0;
-  padding: 0;
-  height: 0;
-}
-
-hr.brut-divider--thin {
-  border-top-width: 1px;
-}
-
-hr.brut-divider--accent {
-  border-top-color: var(--accent);
-}
-
-// Typographic meta bar — section header with metadata, dark fill
-.brut-meta-bar {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 24px;
-  border-top: 2px solid var(--border);
-  border-bottom: 2px solid var(--border);
-  font-family: var(--font);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--bg);
-  background: var(--fg);
-
-  @media (max-width: 768px) {
-    padding: 12px 16px;
-    gap: 10px;
-    font-size: 10px;
-  }
-}
-
-.brut-meta-bar__num {
-  color: var(--accent);
-  letter-spacing: 0.1em;
-}
-
-.brut-meta-bar__text {
-  white-space: nowrap;
-}
-
-.brut-meta-bar__text--accent {
-  color: var(--accent);
-}
-
-.brut-meta-bar__sep {
-  color: var(--muted);
-  letter-spacing: 0;
-}
-
-.brut-meta-bar__line {
-  flex: 1;
-  height: 1px;
-  background: var(--muted);
-  margin: 0 8px;
-  opacity: 0.5;
+@keyframes themeFlash {
+  50% { filter: invert(1); }
 }

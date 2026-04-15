@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { ref, computed, onMounted } from 'vue'
-import { RouterView, useRoute } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router'
 
 const { t, locale } = useI18n()
 const route = useRoute()
+const router = useRouter()
 
 const isStandalone = computed(() => Boolean(route.meta?.standalone))
 
@@ -33,33 +34,123 @@ const isGlitching = ref(false)
 function toggleTheme() {
   isDark.value = !isDark.value
   const theme = isDark.value ? 'dark' : 'light'
-  // Trigger brief glitch effect on theme switch
   isGlitching.value = true
-  setTimeout(() => { isGlitching.value = false }, 460)
+  setTimeout(() => { isGlitching.value = false }, 300)
   document.documentElement.setAttribute('data-theme', theme)
   localStorage.setItem('theme', theme)
 }
 
+// Custom cursor + magnetic elements
+const cursorEl = ref<HTMLElement | null>(null)
+
+onMounted(() => {
+  if (!cursorEl.value) return
+  const cursor = cursorEl.value
+  let cx = 0, cy = 0, tx = 0, ty = 0
+
+  document.addEventListener('mousemove', (e) => {
+    tx = e.clientX
+    ty = e.clientY
+
+    // Magnetic effect — push nearby magnetic elements toward cursor
+    document.querySelectorAll('.magnetic').forEach(el => {
+      const rect = (el as HTMLElement).getBoundingClientRect()
+      const elX = rect.left + rect.width / 2
+      const elY = rect.top + rect.height / 2
+      const dx = tx - elX
+      const dy = ty - elY
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      const maxDist = 100
+
+      if (dist < maxDist) {
+        const pull = (1 - dist / maxDist) * 0.35;
+        (el as HTMLElement).style.transform = `translate(${dx * pull}px, ${dy * pull}px)`
+      } else {
+        (el as HTMLElement).style.transform = ''
+      }
+    })
+  })
+
+  function animate() {
+    cx += (tx - cx) * 0.12
+    cy += (ty - cy) * 0.12
+    cursor.style.transform = `translate(${cx - 10}px, ${cy - 10}px)`
+    requestAnimationFrame(animate)
+  }
+  animate()
+
+})
+
+const navLinks = computed(() => [
+  { path: '/', label: t('nav.main') },
+  { path: '/about', label: t('nav.about') },
+  { path: '/services', label: t('nav.services') },
+  { path: '/process', label: t('nav.process') },
+  { path: '/rates', label: t('nav.rates') },
+  { path: '/work', label: t('nav.work') },
+  { path: '/stack', label: t('nav.stack') },
+  { path: '/contact', label: t('nav.contact') },
+])
+
+function onKeydown(e: KeyboardEvent) {
+  if (isStandalone.value) return
+  const target = e.target as HTMLElement | null
+  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return
+  if (e.metaKey || e.ctrlKey || e.altKey) return
+
+  const paths = navLinks.value.map(l => l.path)
+  const idx = paths.indexOf(route.path)
+  if (idx === -1) return
+
+  if (e.key === 'ArrowRight') {
+    e.preventDefault()
+    const next = paths[(idx + 1) % paths.length]
+    router.push(next)
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault()
+    const prev = paths[(idx - 1 + paths.length) % paths.length]
+    router.push(prev)
+  }
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onUnmounted(() => window.removeEventListener('keydown', onKeydown))
+
 onMounted(() => {
   console.log(
     '%c> LOOKING FOR A FULLSTACK ENGINEER?',
-    'color: #DC4513; font-size: 20px; font-weight: 900; font-family: monospace;'
+    'color: #e8e8e8; font-size: 20px; font-weight: 900; font-family: monospace;'
   )
   console.log(
     '%cYou found one. Check the source — it\'s clean.\nhttps://github.com/denis-sofonov | https://t.me/denis_sofonov',
-    'color: #f5f5f5; font-size: 13px; font-family: monospace;'
+    'color: #888; font-size: 13px; font-family: monospace;'
   )
 })
 </script>
 
 <template>
-  <!-- Standalone pet project pages — no brutalist wrapper -->
+  <!-- Standalone pet project pages — no wrapper -->
   <RouterView v-if="isStandalone" />
 
-  <!-- Main brutalist business card site -->
+  <!-- Main portfolio site -->
   <div v-else class="page" :class="{ 'page--glitching': isGlitching }">
+    <Teleport to="body">
+      <div ref="cursorEl" class="cursor"></div>
+    </Teleport>
+
     <header class="header">
-      <span class="header__logo">DS</span>
+      <RouterLink to="/" class="header__logo">sofonov.dev</RouterLink>
+      <nav class="header__nav">
+        <RouterLink
+          v-for="link in navLinks"
+          :key="link.path"
+          :to="link.path"
+          class="header__nav-link magnetic"
+          :class="{ 'header__nav-link--active': route.path === link.path }"
+        >
+          [ {{ link.label }} ]
+        </RouterLink>
+      </nav>
       <div class="header__controls">
         <button class="header__btn" @click="toggleTheme">
           {{ isDark ? t('theme.light') : t('theme.dark') }}
@@ -70,16 +161,13 @@ onMounted(() => {
       </div>
     </header>
 
-    <RouterView />
+    <router-view v-slot="{ Component }">
+      <transition name="page" mode="out-in" :duration="{ enter: 400, leave: 300 }">
+        <component :is="Component" :key="route.path" />
+      </transition>
+    </router-view>
 
-    <footer class="footer">
-      <span>{{ t('footer.copyright', { year: new Date().getFullYear() }) }}</span>
-      <span class="footer__year">A.D. <em>{{ new Date().getFullYear() }}</em></span>
-      <span>
-        VUE 3 + TS + VITE ·
-        <a href="https://github.com/denis-sofonov" target="_blank" rel="noopener noreferrer" class="footer__link">view source</a>
-      </span>
-    </footer>
+    <!-- footer removed — pages are full-screen compositions -->
   </div>
 </template>
 
