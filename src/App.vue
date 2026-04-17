@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { RouterView, RouterLink } from 'vue-router'
+import Lenis from 'lenis'
+import StickyCta from './components/StickyCta.vue'
+import DrawLayer from './components/DrawLayer.vue'
 
 const { t, locale } = useI18n()
-const route = useRoute()
-const router = useRouter()
 
-const isStandalone = computed(() => Boolean(route.meta?.standalone))
+function syncPageMeta() {
+  document.title = t('pageTitle')
+  document.documentElement.setAttribute('lang', locale.value)
+}
+syncPageMeta()
+watch(locale, syncPageMeta)
 
 function getSystemTheme(): string {
   const saved = localStorage.getItem('theme')
@@ -36,116 +42,132 @@ function toggleTheme() {
   localStorage.setItem('theme', theme)
 }
 
-// Custom cursor + magnetic elements
-const cursorEl = ref<HTMLElement | null>(null)
-
-onMounted(() => {
-  if (!cursorEl.value) return
-  const cursor = cursorEl.value
-  let cx = 0, cy = 0, tx = 0, ty = 0
-
-  document.addEventListener('mousemove', (e) => {
-    tx = e.clientX
-    ty = e.clientY
-
-    // Magnetic effect — push nearby magnetic elements toward cursor
-    document.querySelectorAll('.magnetic').forEach(el => {
-      const rect = (el as HTMLElement).getBoundingClientRect()
-      const elX = rect.left + rect.width / 2
-      const elY = rect.top + rect.height / 2
-      const dx = tx - elX
-      const dy = ty - elY
-      const dist = Math.sqrt(dx * dx + dy * dy)
-      const maxDist = 100
-
-      if (dist < maxDist) {
-        const pull = (1 - dist / maxDist) * 0.35;
-        (el as HTMLElement).style.transform = `translate(${dx * pull}px, ${dy * pull}px)`
-      } else {
-        (el as HTMLElement).style.transform = ''
-      }
-    })
-  })
-
-  function animate() {
-    cx += (tx - cx) * 0.12
-    cy += (ty - cy) * 0.12
-    cursor.style.transform = `translate(${cx - 14}px, ${cy - 14}px)`
-    requestAnimationFrame(animate)
-  }
-  animate()
-
-})
-
 const navLinks = computed(() => [
-  { path: '/', label: t('nav.main') },
-  { path: '/about', label: t('nav.about') },
-  { path: '/what-i-do', label: t('nav.services') },
-  { path: '/how-i-do', label: t('nav.process') },
-  { path: '/what-i-use', label: t('nav.stack') },
-  { path: '/now', label: t('nav.now') },
-  { path: '/bookmarks', label: t('nav.bookmarks') },
-  { path: '/contact', label: t('nav.contact') },
+  { href: '/#services', hash: '#services', label: t('nav.services') },
+  { href: '/#stack', hash: '#stack', label: t('nav.stack') },
+  { href: '/#process', hash: '#process', label: t('nav.process') },
+  { href: '/#principles', hash: '#principles', label: t('nav.principles') },
+  { href: '/#faq', hash: '#faq', label: t('nav.faq') },
+  { href: '/#contacts', hash: '#contacts', label: t('nav.contacts') },
 ])
 
-function onKeydown(e: KeyboardEvent) {
-  if (isStandalone.value) return
-  const target = e.target as HTMLElement | null
-  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return
-  if (e.metaKey || e.ctrlKey || e.altKey) return
+let lenis: Lenis | null = null
+let rafId = 0
 
-  const paths = navLinks.value.map(l => l.path)
-  const idx = paths.indexOf(route.path)
-  if (idx === -1) return
-
-  if (e.key === 'ArrowRight') {
-    e.preventDefault()
-    const next = paths[(idx + 1) % paths.length]
-    router.push(next)
-  } else if (e.key === 'ArrowLeft') {
-    e.preventDefault()
-    const prev = paths[(idx - 1 + paths.length) % paths.length]
-    router.push(prev)
+function scrollToAnchor(e: Event, link: { href: string; hash: string }) {
+  e.preventDefault()
+  const el = document.querySelector(link.hash) as HTMLElement | null
+  if (!el) return
+  if (lenis) {
+    lenis.scrollTo(el, { offset: 0, duration: 1.3 })
+  } else {
+    el.scrollIntoView({ behavior: 'smooth' })
   }
 }
 
-onMounted(() => window.addEventListener('keydown', onKeydown))
-onUnmounted(() => window.removeEventListener('keydown', onKeydown))
+const activeSection = ref('')
+let sectionObserver: IntersectionObserver | null = null
 
 onMounted(() => {
-  console.log(
-    '%c> LOOKING FOR A FULLSTACK ENGINEER?',
-    'color: #e8e8e8; font-size: 20px; font-weight: 900; font-family: monospace;'
+  lenis = new Lenis({
+    duration: 1.1,
+    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    smoothWheel: true,
+    wheelMultiplier: 1,
+    touchMultiplier: 1.6,
+  })
+
+  let smoothedVelocity = 0
+  let smoothedDrift = 0
+  const root = document.documentElement
+
+  function updateScrollEffects() {
+    if (!lenis) return
+    const progress = lenis.progress || 0
+    root.style.setProperty('--scroll-progress', progress.toFixed(4))
+
+    const absTarget = Math.min(Math.abs(lenis.velocity) / 45, 1)
+    smoothedVelocity += (absTarget - smoothedVelocity) * 0.18
+    root.style.setProperty('--scroll-velocity', smoothedVelocity.toFixed(3))
+
+    const signedTarget = Math.max(-1, Math.min(1, lenis.velocity / 45))
+    smoothedDrift += (signedTarget - smoothedDrift) * 0.15
+    root.style.setProperty('--scroll-drift', smoothedDrift.toFixed(3))
+
+    const vh = window.innerHeight
+
+    document.querySelectorAll<HTMLElement>('[data-parallax]').forEach(el => {
+      const rect = el.getBoundingClientRect()
+      const center = rect.top + rect.height / 2
+      const p = (center - vh / 2) / vh
+      const factor = parseFloat(el.dataset.parallax || '30')
+      el.style.setProperty('--parallax-y', `${(-p * factor).toFixed(1)}px`)
+    })
+
+    const revealStart = vh * 1.0
+    const revealEnd = vh * 0.3
+    document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(el => {
+      const rect = el.getBoundingClientRect()
+      const raw = (revealStart - rect.top) / (revealStart - revealEnd)
+      const p = Math.max(0, Math.min(1, raw))
+      const eased = p < 0.5
+        ? 2 * p * p
+        : 1 - Math.pow(-2 * p + 2, 2) / 2
+      el.style.setProperty('--reveal', eased.toFixed(3))
+    })
+  }
+
+  lenis.on('scroll', updateScrollEffects)
+  requestAnimationFrame(() => requestAnimationFrame(updateScrollEffects))
+  window.addEventListener('resize', updateScrollEffects)
+
+  function raf(time: number) {
+    lenis?.raf(time)
+    rafId = requestAnimationFrame(raf)
+  }
+  rafId = requestAnimationFrame(raf)
+
+  sectionObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          activeSection.value = '#' + entry.target.id
+        }
+      }
+    },
+    { threshold: 0.3 },
   )
-  console.log(
-    '%cYou found one. Check the source — it\'s clean.\nhttps://github.com/denis-sofonov | https://t.me/denis_sofonov',
-    'color: #888; font-size: 13px; font-family: monospace;'
-  )
+
+  const ids = ['services', 'stack', 'process', 'principles', 'faq', 'contacts']
+  ids.forEach(id => {
+    const el = document.getElementById(id)
+    if (el) sectionObserver!.observe(el)
+  })
+})
+
+onUnmounted(() => {
+  sectionObserver?.disconnect()
+  cancelAnimationFrame(rafId)
+  lenis?.destroy()
+  lenis = null
 })
 </script>
 
 <template>
-  <!-- Standalone pet project pages — no wrapper -->
-  <RouterView v-if="isStandalone" />
-
-  <!-- Main portfolio site -->
-  <div v-else class="page">
-    <Teleport to="body">
-      <div ref="cursorEl" class="cursor"></div>
-    </Teleport>
-
+  <div class="page">
     <header class="header">
       <RouterLink to="/" class="header__logo">sofonov.dev</RouterLink>
       <nav class="header__nav">
-        <RouterLink
+        <a
           v-for="link in navLinks"
-          :key="link.path"
-          :to="link.path"
+          :key="link.href"
+          :href="link.href"
           class="header__nav-link"
-          :class="{ 'header__nav-link--active': route.path === link.path }"
+          :class="{ 'header__nav-link--active': activeSection === link.hash }"
+          @click="scrollToAnchor($event, link)"
         >
           {{ link.label }}
-        </RouterLink>
+        </a>
       </nav>
       <div class="header__controls">
         <button class="header__btn" @click="toggleTheme">
@@ -157,13 +179,11 @@ onMounted(() => {
       </div>
     </header>
 
-    <router-view v-slot="{ Component }">
-      <transition name="page" mode="out-in" :duration="{ enter: 450, leave: 300 }">
-        <component :is="Component" :key="route.path" />
-      </transition>
-    </router-view>
+    <div class="progress-bar" aria-hidden="true" />
 
-    <!-- footer removed — pages are full-screen compositions -->
+    <RouterView />
+    <StickyCta />
+    <DrawLayer />
   </div>
 </template>
 

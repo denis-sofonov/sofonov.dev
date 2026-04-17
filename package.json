@@ -20,7 +20,6 @@
     "radix-vue": "^1.9.17",
     "tailwind-merge": "^3.5.0",
     "tailwindcss-animate": "^1.0.7",
-    "three": "^0.183.2",
     "vue": "^3.5.13",
     "vue-i18n": "^10.0.6",
     "vue-router": "^4.6.4",
@@ -28,7 +27,6 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",
-    "@types/three": "^0.183.1",
     "@vitejs/plugin-vue": "^5.2.3",
     "playwright": "^1.59.1",
     "sass-embedded": "^1.87.0",
