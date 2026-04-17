@@ -5,6 +5,7 @@ import { RouterView, RouterLink } from 'vue-router'
 import Lenis from 'lenis'
 import StickyCta from './components/StickyCta.vue'
 import DrawLayer from './components/DrawLayer.vue'
+import LogoMark from './components/LogoMark.vue'
 
 const { t, locale } = useI18n()
 
@@ -156,7 +157,10 @@ onUnmounted(() => {
 <template>
   <div class="page">
     <header class="header">
-      <RouterLink to="/" class="header__logo">sofonov.dev</RouterLink>
+      <RouterLink to="/" class="header__logo">
+        <LogoMark :size="26" color="#d9211f" class="header__logo-mark" />
+        <span>sofonov.dev</span>
+      </RouterLink>
       <nav class="header__nav">
         <a
           v-for="link in navLinks"
