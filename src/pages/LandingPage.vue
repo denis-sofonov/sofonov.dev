@@ -1,21 +1,19 @@
 <script setup lang="ts">
 import HeroSection from '../components/sections/HeroSection.vue'
-import ServicesSection from '../components/sections/ServicesSection.vue'
+import ExperienceSection from '../components/sections/ExperienceSection.vue'
 import StackSection from '../components/sections/StackSection.vue'
-import ProcessSection from '../components/sections/ProcessSection.vue'
-import PrinciplesSection from '../components/sections/PrinciplesSection.vue'
-import FaqSection from '../components/sections/FaqSection.vue'
+import ProjectsSection from '../components/sections/ProjectsSection.vue'
+import NowSection from '../components/sections/NowSection.vue'
 import ContactsSection from '../components/sections/ContactsSection.vue'
 </script>
 
 <template>
   <div class="landing">
     <HeroSection />
-    <ServicesSection />
+    <ExperienceSection />
     <StackSection />
-    <ProcessSection />
-    <PrinciplesSection />
-    <FaqSection />
+    <ProjectsSection />
+    <NowSection />
     <ContactsSection />
   </div>
 </template>

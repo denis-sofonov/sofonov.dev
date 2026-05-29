@@ -2,32 +2,95 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>denis sofonov — web developer</title>
-    <meta name="description" content="Web developer, Moscow. Vue 3, Nuxt, TypeScript, Node.js. I build web apps end-to-end — from the first idea to something you can actually click." />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>denis sofonov — fullstack developer</title>
+    <meta name="description" content="Fullstack developer, Moscow. 4+ years. Lead frontend in Vue 3 / Nuxt and React / Next, going wide on the backend — Node, Python, Go, PHP, Ruby. I architect products end to end." />
+    <meta name="author" content="Denis Sofonov" />
+    <meta name="keywords" content="fullstack developer, lead frontend, vue, nuxt, react, typescript, node, python, go, moscow" />
+    <link rel="canonical" href="https://sofonov.dev/" />
 
-    <!-- Open Graph — preview card for Telegram, LinkedIn, Twitter -->
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="denis sofonov — web developer" />
-    <meta property="og:description" content="I build web apps end-to-end. Vue, Nuxt, TypeScript, Node." />
-    <meta property="og:url" content="https://sofonov.dev" />
+    <meta property="og:site_name" content="sofonov.dev" />
+    <meta property="og:title" content="denis sofonov — fullstack developer" />
+    <meta property="og:description" content="Lead frontend going fullstack. Vue, Nuxt, React, Node — and Python, Go, PHP, Ruby. Open to offers." />
+    <meta property="og:url" content="https://sofonov.dev/" />
+    <meta property="og:image" content="https://sofonov.dev/og.svg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="denis sofonov — fullstack developer, moscow" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="ru_RU" />
 
     <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="denis sofonov — web developer" />
-    <meta name="twitter:description" content="I build web apps end-to-end." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="denis sofonov — fullstack developer" />
+    <meta name="twitter:description" content="Lead frontend going fullstack. Vue, Nuxt, React, Node — and Python, Go, PHP, Ruby." />
+    <meta name="twitter:image" content="https://sofonov.dev/og.svg" />
 
-    <!-- Favicon — red circle + 5 triangles (static version of LogoMark) -->
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g fill='%23d9211f'><polygon points='56.4,39.8 43.6,39.8 50,16'/><polygon points='61.8,52.1 57.7,40.8 76.3,40.4'/><polygon points='52.9,61.6 61,54.9 64.1,66.9'/><polygon points='38.4,46.9 43.1,59.8 19.9,60.9'/><polygon points='45.1,39 38.4,47.1 34.7,37.1'/><circle cx='50' cy='50' r='12'/></g></svg>" />
 
-    <meta name="theme-color" content="#f5f5f0" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f5f0" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0a" />
 
+    <!-- Fonts: preconnect + preload critical weights actually used above the fold -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@100;200;300;400;500;600;700&family=Cousine&display=swap" rel="stylesheet" />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Onest:wght@400;500;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Onest:wght@400;500;700&display=swap"
+    />
+
+    <!-- JSON-LD: Person schema for rich results -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Denis Sofonov",
+        "alternateName": "denis sofonov",
+        "url": "https://sofonov.dev/",
+        "image": "https://sofonov.dev/og.svg",
+        "jobTitle": "Fullstack Developer",
+        "description": "Lead frontend developer going fullstack — architecting products end to end with Vue, Nuxt, React and Node, and growing across Python, Go, PHP and Ruby.",
+        "email": "mailto:denissofonovv@gmail.com",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Moscow",
+          "addressCountry": "RU"
+        },
+        "knowsAbout": [
+          "Vue 3", "Nuxt", "React", "TypeScript", "Node.js", "Python",
+          "Go", "PostgreSQL", "Clean Architecture", "Web Performance"
+        ],
+        "sameAs": [
+          "https://t.me/denis_sofonov",
+          "https://github.com/denis-sofonov"
+        ]
+      }
+    </script>
+
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+      (function(m,e,t,r,i,k,a){
+          m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+          m[i].l=1*new Date();
+          for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+          k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+      })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=108676501', 'ym');
+
+      ym(108676501, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <!-- /Yandex.Metrika counter -->
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/108676501" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
   </body>
 </html>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#0a0a0a"/>
+  <rect x="0.5" y="0.5" width="1199" height="629" fill="none" stroke="#1c1c1c"/>
+  <!-- spiky mark -->
+  <g fill="#d9211f" transform="translate(96 96) scale(1.6)">
+    <polygon points="56.4,39.8 43.6,39.8 50,16"/>
+    <polygon points="61.8,52.1 57.7,40.8 76.3,40.4"/>
+    <polygon points="52.9,61.6 61,54.9 64.1,66.9"/>
+    <polygon points="38.4,46.9 43.1,59.8 19.9,60.9"/>
+    <polygon points="45.1,39 38.4,47.1 34.7,37.1"/>
+    <circle cx="50" cy="50" r="12"/>
+  </g>
+  <text x="96" y="380" fill="#ececec" font-family="'Onest','Inter Tight',Arial,sans-serif" font-size="116" font-weight="700" letter-spacing="-4">denis sofonov</text>
+  <text x="100" y="452" fill="#9a9a9a" font-family="'JetBrains Mono','Cousine',monospace" font-size="34" letter-spacing="2">fullstack developer · moscow</text>
+  <g font-family="'JetBrains Mono','Cousine',monospace" font-size="26" letter-spacing="1">
+    <text x="100" y="540" fill="#d9211f">/</text>
+    <text x="124" y="540" fill="#9a9a9a">vue · nuxt · react · node — python · go · php · ruby</text>
+  </g>
+</svg>

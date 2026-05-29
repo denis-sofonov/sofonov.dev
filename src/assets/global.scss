@@ -46,9 +46,13 @@ html.lenis, html.lenis body {
     inset: 0;
     background: var(--accent);
     transform-origin: left center;
-    transform: scaleX(var(--scroll-progress, 0));
+    transform: scaleX(0);
     will-change: transform;
   }
+}
+
+html.is-ready .progress-bar::after {
+  transform: scaleX(var(--scroll-progress, 0));
 }
 
 :root[data-theme='light'] .progress-bar {
@@ -59,7 +63,7 @@ html.lenis, html.lenis body {
 // SCROLL-REACTIVE UTILITIES
 // ==========================================
 [data-parallax] {
-  transform: translate3d(0, var(--parallax-y, 0), 0);
+  transform: translate3d(calc(var(--scroll-drift, 0) * 22px), var(--parallax-y, 0), 0);
   will-change: transform;
 }
 
@@ -77,10 +81,31 @@ html.lenis, html.lenis body {
 // All elements also drift subtly with scroll
 // velocity for an "alive" momentum feeling.
 // ==========================================
+@property --reveal {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
 [data-reveal] {
   --reveal: 0;
   will-change: transform, opacity, clip-path, translate;
   translate: 0 calc(var(--scroll-drift, 0) * 7px);
+}
+
+// Entrance variant — animates on page load (not scroll-linked).
+// Used for hero content that should come alive on arrival.
+[data-entrance] {
+  --reveal: 0;
+  --entrance-delay: 0.15s;
+  --entrance-duration: 1.3s;
+}
+html.is-ready [data-entrance] {
+  animation: entrance-reveal var(--entrance-duration) cubic-bezier(0.22, 1, 0.36, 1) var(--entrance-delay) forwards;
+}
+@keyframes entrance-reveal {
+  from { --reveal: 0; }
+  to   { --reveal: 1; }
 }
 
 [data-reveal='fade-up'] {
@@ -112,6 +137,73 @@ html.lenis, html.lenis body {
   transform: translate3d(calc((1 - var(--reveal)) * 80px), 0, 0);
 }
 
+// ==========================================
+// MASK REVEAL — per-word/char stagger driven
+// by --reveal on the wrapper. Split is done
+// at mount time, so wrappers just expose --i
+// (index) and --count (total), the rest is
+// pure CSS.
+// ==========================================
+[data-reveal='mask'],
+[data-entrance='mask'] {
+  --stagger: 0.055;
+}
+
+[data-reveal='mask'] .mask-tok,
+[data-entrance='mask'] .mask-tok {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: baseline;
+  padding: 0.05em 0.02em 0.12em;
+  margin: -0.05em -0.02em -0.12em;
+  line-height: inherit;
+}
+
+[data-reveal='mask'] .mask-tok__inner,
+[data-entrance='mask'] .mask-tok__inner {
+  display: inline-block;
+  --span: calc(1 + var(--count, 1) * var(--stagger));
+  --raw: calc(var(--reveal, 0) * var(--span) - var(--i, 0) * var(--stagger));
+  --local: min(1, max(0, var(--raw)));
+  // ease-out quart approx via multiplied subtraction
+  --inv: calc(1 - var(--local));
+  --inv2: calc(var(--inv) * var(--inv));
+  --inv4: calc(var(--inv2) * var(--inv2));
+  --e: calc(1 - var(--inv4));
+  transform: translate3d(0, calc((1 - var(--e)) * 115%), 0);
+  will-change: transform;
+}
+
+// Char-mode uses a tighter stagger
+[data-reveal='mask'][data-split='chars'],
+[data-entrance='mask'][data-split='chars'] {
+  --stagger: 0.022;
+}
+
+// Variant: mask-fade uses mask + opacity for softer feel
+[data-reveal='mask-fade'],
+[data-entrance='mask-fade'] {
+  --stagger: 0.045;
+}
+[data-reveal='mask-fade'] .mask-tok,
+[data-entrance='mask-fade'] .mask-tok {
+  display: inline-block;
+  vertical-align: baseline;
+}
+[data-reveal='mask-fade'] .mask-tok__inner,
+[data-entrance='mask-fade'] .mask-tok__inner {
+  display: inline-block;
+  --span: calc(1 + var(--count, 1) * var(--stagger));
+  --raw: calc(var(--reveal, 0) * var(--span) - var(--i, 0) * var(--stagger));
+  --local: min(1, max(0, var(--raw)));
+  --inv: calc(1 - var(--local));
+  --inv2: calc(var(--inv) * var(--inv));
+  --e: calc(1 - var(--inv2));
+  opacity: var(--e);
+  transform: translate3d(0, calc((1 - var(--e)) * 24px), 0);
+  will-change: transform, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-reveal] {
     --reveal: 1 !important;
@@ -119,6 +211,38 @@ html.lenis, html.lenis body {
     translate: none !important;
     clip-path: none !important;
     opacity: 1 !important;
+  }
+  [data-reveal='mask'] .mask-tok__inner,
+  [data-reveal='mask-fade'] .mask-tok__inner {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+
+// ==========================================
+// MAGNETIC HOVER — pointer pulls the element
+// toward the cursor within a radius. JS writes
+// --mx/--my; CSS eases via transition.
+// ==========================================
+// Outer magnetic only receives transform when there is no inner layer
+[data-magnetic]:not(:has([data-magnetic-inner])) {
+  display: inline-block;
+  transform: translate3d(var(--mx, 0px), var(--my, 0px), 0);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+[data-magnetic-inner] {
+  display: inline-block;
+  transform: translate3d(var(--mx, 0px), var(--my, 0px), 0);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-magnetic],
+  [data-magnetic-inner] {
+    transform: none !important;
+    transition: none !important;
   }
 }
 
@@ -139,9 +263,9 @@ body {
   --border: rgba(255, 255, 255, 0.08);
   --accent: #c92a2a;
 
-  --font-sans: 'Inter Tight', Arial, sans-serif;
-  --font-display: 'Inter Tight', Arial, sans-serif;
-  --font-mono: 'Cousine', monospace;
+  --font-sans: 'Onest', 'Inter Tight', Arial, sans-serif;
+  --font-display: 'Onest', 'Inter Tight', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cousine', monospace;
 
   --fs-hero: clamp(56px, 12vw, 160px);
   --fs-h1:   clamp(48px, 8vw, 120px);
@@ -231,7 +355,7 @@ body:has(.page) {
   left: 0;
   right: 0;
   z-index: 9999;
-  height: 48px;
+  height: 56px;
   padding: 0 32px;
   display: flex;
   justify-content: space-between;
@@ -240,14 +364,14 @@ body:has(.page) {
 
 .header__logo {
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   color: var(--fg);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .header__logo-mark {
@@ -303,6 +427,121 @@ body:has(.page) {
   opacity: 0.55;
 
   &:hover { opacity: 1; color: var(--accent); }
+}
+
+// ==========================================
+// SECTION INDICATOR — small fixed chip in
+// bottom-left that shows the active section
+// number + name, masked slide transition
+// between sections.
+// ==========================================
+.section-indicator {
+  position: fixed;
+  left: 32px;
+  bottom: 32px;
+  z-index: 9996;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+
+  &.is-visible {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+
+  @media (max-width: 768px) {
+    left: 16px;
+    bottom: 120px;
+  }
+}
+
+.section-indicator__card {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 8px 12px 8px 10px;
+  border-radius: 2px;
+  backdrop-filter: blur(8px);
+}
+
+.section-indicator__n {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.section-indicator__bar {
+  display: inline-block;
+  width: 14px;
+  height: 1px;
+  background: var(--border);
+}
+
+.section-indicator__label {
+  opacity: 0.85;
+}
+
+.sect-ind-enter-active,
+.sect-ind-leave-active {
+  transition: transform 0.5s cubic-bezier(0.6, 0, 0.1, 1), opacity 0.4s ease, clip-path 0.5s cubic-bezier(0.6, 0, 0.1, 1);
+}
+.sect-ind-enter-from {
+  clip-path: inset(0 0 100% 0);
+  transform: translate3d(0, 14px, 0);
+}
+.sect-ind-leave-to {
+  clip-path: inset(100% 0 0 0);
+  transform: translate3d(0, -14px, 0);
+}
+
+// ==========================================
+// SECTION RAIL — sticky label inside a section
+// that pins while content scrolls past it.
+// ==========================================
+.section-rail {
+  position: sticky;
+  top: 72px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0 32px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  pointer-events: none;
+  mix-blend-mode: difference;
+}
+
+.section-rail__n {
+  color: #d9211f;
+  opacity: 0.85;
+}
+
+.section-rail__bar {
+  display: inline-block;
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.section-rail__label {
+  color: #ffffff;
+  opacity: 0.85;
+}
+
+@media (max-width: 768px) {
+  .section-rail { top: 60px; padding: 0 0 24px; }
 }
 
 // ==========================================
