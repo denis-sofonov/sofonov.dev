@@ -9,4 +9,17 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Split the heavy, rarely-changing libraries into their own cacheable
+        // chunks so the app code stays small and a redeploy doesn't bust the
+        // three.js / gsap caches.
+        manualChunks: {
+          three: ['three'],
+          motion: ['gsap', 'lenis'],
+        },
+      },
+    },
+  },
 })
