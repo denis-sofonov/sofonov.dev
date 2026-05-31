@@ -7,7 +7,6 @@ const { t, tm, locale } = useI18n()
 
 const meta = computed(() => tm('heroMeta') as { k: string; v: string }[])
 const looking = computed(() => tm('lookingFor.items') as { k: string; v: string }[])
-const cvHref = '/denis-sofonov-cv.pdf'
 
 // ── weekly activity strip — last 26 weeks ──────────────────────────
 // Decorative by default (a deterministic "shipping rhythm"); upgrades to real
@@ -272,8 +271,10 @@ function initHero(container: HTMLDivElement, initialText: string) {
       const speed = Math.hypot(mvx, mvy)
       if (speed > 1) {
         const nx = mvx / speed, ny = mvy / speed
-        const force = Math.min(speed, 40)
-        const R = 70
+        // Gentler wake: lower force cap + softer multiplier over a wider, more
+        // diffuse radius — the cursor nudges the letters rather than shoving them.
+        const force = Math.min(speed, 22)
+        const R = 95
         const R2 = R * R
         for (let i = 0; i < pointCount; i++) {
           const ix = i * 3
@@ -281,10 +282,13 @@ function initHero(container: HTMLDivElement, initialText: string) {
           const dy = targets[ix + 1] + offsets[ix + 1] - mwy
           const d2 = dx * dx + dy * dy
           if (d2 < R2) {
+            // squared falloff — only the points right at the cursor feel much,
+            // so the disturbance reads soft and local instead of a hard ring.
             const prox = 1 - Math.sqrt(d2) / R
+            const proxSoft = prox * prox
             const spread = (Math.random() - 0.5) * 0.6
-            velocities[ix]     += (nx + -ny * spread) * force * prox * 0.5
-            velocities[ix + 1] += (ny + nx * spread) * force * prox * 0.5
+            velocities[ix]     += (nx + -ny * spread) * force * proxSoft * 0.3
+            velocities[ix + 1] += (ny + nx * spread) * force * proxSoft * 0.3
           }
         }
       }
@@ -346,9 +350,13 @@ function initHero(container: HTMLDivElement, initialText: string) {
   }
   window.addEventListener('resize', onResize)
 
-  // Reduced-motion users opt out of the autonomous idle scatter.
+  // Reduced-motion users opt out of the autonomous idle scatter. Touch devices
+  // do too: with no pointer to "wake" the letters, the idle scatter would have
+  // nothing to recover from and the name would sit there as an unreadable blob.
   const prefersReducedMotion = typeof matchMedia !== 'undefined'
     && matchMedia('(prefers-reduced-motion: reduce)').matches
+  const isTouch = typeof matchMedia !== 'undefined'
+    && matchMedia('(hover: none), (pointer: coarse)').matches
 
   let raf = 0
   let assembleT = 0
@@ -380,7 +388,7 @@ function initHero(container: HTMLDivElement, initialText: string) {
     // effect entirely (there's already a scroll-disperse happening — stacking
     // jitter on top would read as noise, not behaviour).
     recentActivity = Math.max(0, recentActivity - dt * 0.28)
-    const targetDrift = prefersReducedMotion || disperse > 0.02
+    const targetDrift = prefersReducedMotion || isTouch || disperse > 0.02
       ? 0
       : (1 - recentActivity)
     idleDrift += (targetDrift - idleDrift) * Math.min(1, dt * 2.8)
@@ -414,8 +422,8 @@ function initHero(container: HTMLDivElement, initialText: string) {
         let homeK = 0.02
         if (offMag2 > 4) homeK = 0.006 + Math.min(offMag2 / 90000, 0.018)
         // Homing boosts while the user is actively moving, so the "letters
-        // snap back" moment reads as emphatic rather than slow drift-home.
-        const homingBoost = 1 + recentActivity * 1.8
+        // snap back" moment reads smooth rather than a hard snap.
+        const homingBoost = 1 + recentActivity * 1.0
         velocities[ix] += -offsets[ix] * homeK * homingBoost
         velocities[iy] += -offsets[iy] * homeK * homingBoost
         offsets[ix] += velocities[ix]
@@ -558,10 +566,10 @@ function scrollNext() {
               />
             </div>
           </div>
-          <a class="hero__cv" :href="cvHref" download>
-            <span class="hero__cv-ic" aria-hidden="true">↓</span>
-            {{ t('cvLabel') }}
-          </a>
+          <RouterLink class="hero__cv" to="/resume">
+            <span class="hero__cv-ic" aria-hidden="true">→</span>
+            {{ t('viewResume') }}
+          </RouterLink>
         </div>
         <div class="hero__right">
           <p
@@ -803,9 +811,23 @@ html.is-ready .hero__week {
   gap: 6px;
   max-width: 36vw;
   pointer-events: none;
+  /* Exit on scroll — same gesture as the bottom row: slide out toward the
+     corner, fade and blur as the hero leaves. Mirrors .hero__left / .hero__right. */
+  --exit: clamp(0, calc(var(--scroll-progress, 0) * 14), 1);
+  opacity: calc(1 - var(--exit) * 1.15);
+  filter: blur(calc(var(--exit) * 3px));
+  will-change: translate, opacity, filter;
 }
-.hero__corner--left { left: 32px; align-items: flex-start; }
-.hero__corner--right { right: 32px; align-items: flex-end; }
+.hero__corner--left {
+  left: 32px;
+  align-items: flex-start;
+  translate: calc(var(--exit) * -130px) calc(var(--exit) * -34px);
+}
+.hero__corner--right {
+  right: 32px;
+  align-items: flex-end;
+  translate: calc(var(--exit) * 130px) calc(var(--exit) * -34px);
+}
 
 .hero__corner-head {
   font-family: var(--font-mono);
