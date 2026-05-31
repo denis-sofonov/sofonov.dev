@@ -63,7 +63,7 @@ onUnmounted(() => {
     data-magnetic="120"
     data-magnetic-strength="0.3"
     data-cursor="cta"
-    data-cursor-text="say hi"
+    :data-cursor-text="t('cta.sayHi')"
   >
     <span class="sticky-cta__inner" data-magnetic-inner>
       <Transition name="cta-swap" mode="out-in">
