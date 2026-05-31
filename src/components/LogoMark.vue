@@ -306,6 +306,11 @@ function init() {
   let pitch = -0.2
   let last = 0
 
+  // Pause the WebGL draw loop whenever the mark is scrolled off-screen — a
+  // decorative logo has no business burning a GPU draw every frame from a
+  // section the user can't see (the contacts mark especially).
+  let visible = true
+
   const render = (t: number) => {
     if (!last) last = t
     const dt = Math.min(0.05, (t - last) / 1000)
@@ -336,12 +341,21 @@ function init() {
     gl.uniform3f(uCam, 0, 0, CAM_Z)
 
     gl.drawArrays(gl.TRIANGLES, 0, mesh.positions.length / 3)
-    raf = requestAnimationFrame(render)
+    raf = visible ? requestAnimationFrame(render) : 0
   }
   raf = requestAnimationFrame(render)
 
+  const io = new IntersectionObserver(([e]) => {
+    visible = e.isIntersecting
+    // Resume cleanly: reset the frame clock so the spin doesn't jump by the
+    // whole off-screen interval, and restart the loop if it had stopped.
+    if (visible && !raf) { last = 0; raf = requestAnimationFrame(render) }
+  }, { threshold: 0 })
+  io.observe(canvas)
+
   cleanup = () => {
     cancelAnimationFrame(raf)
+    io.disconnect()
     gl.deleteBuffer(posBuf)
     gl.deleteBuffer(normBuf)
     gl.deleteProgram(prog)

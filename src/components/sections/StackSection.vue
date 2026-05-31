@@ -261,6 +261,9 @@ const toolCentres = new Map<string, { cx: number; cy: number }>()
 const cursorPos = { x: 0, y: 0 }
 let cloudRect: DOMRect | null = null
 let raf = 0
+// The cloud tick reads layout (getBoundingClientRect) every frame — pointless
+// while the section is off-screen. Gate it on visibility.
+let stackVisible = true
 let cleanupFns: Array<() => void> = []
 
 interface Drift { ampX: number; ampY: number; spX: number; spY: number; phX: number; phY: number }
@@ -299,6 +302,8 @@ function rectEdge(dx: number, dy: number, hw: number, hh: number, gap: number) {
 }
 
 function tick(time: number) {
+  raf = requestAnimationFrame(tick)
+  if (!stackVisible) return
   recalcCloudRect()
   if (cloudRect) {
     const W = cloudRect.width
@@ -368,7 +373,6 @@ function tick(time: number) {
       }
     }
   }
-  raf = requestAnimationFrame(tick)
 }
 
 function onPointerMove(e: PointerEvent) {
@@ -397,9 +401,17 @@ onMounted(() => {
   const onResize = () => recalcCloudRect()
   window.addEventListener('resize', onResize)
   cloudRef.value?.addEventListener('pointermove', onPointerMove, { passive: true })
+
+  const io = new IntersectionObserver(([e]) => {
+    stackVisible = e.isIntersecting
+    if (stackVisible) recalcCloudRect()
+  }, { threshold: 0 })
+  if (sectionRef.value) io.observe(sectionRef.value)
+
   cleanupFns.push(() => {
     window.removeEventListener('resize', onResize)
     cloudRef.value?.removeEventListener('pointermove', onPointerMove)
+    io.disconnect()
   })
   raf = requestAnimationFrame(tick)
 })

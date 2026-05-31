@@ -350,6 +350,14 @@ function initHero(container: HTMLDivElement, initialText: string) {
   }
   window.addEventListener('resize', onResize)
 
+  // The fixed particle canvas keeps simulating + drawing across the whole page
+  // by design — but once the hero is scrolled away it's fully covered by the
+  // sections below, so every particle update + GL draw is wasted. Gate it on
+  // visibility: the single biggest always-on cost on the page.
+  let heroVisible = true
+  const heroIO = new IntersectionObserver(([e]) => { heroVisible = e.isIntersecting }, { threshold: 0 })
+  heroIO.observe(container)
+
   // Reduced-motion users opt out of the autonomous idle scatter. Touch devices
   // do too: with no pointer to "wake" the letters, the idle scatter would have
   // nothing to recover from and the name would sit there as an unreadable blob.
@@ -368,6 +376,9 @@ function initHero(container: HTMLDivElement, initialText: string) {
   let idleDrift = 0
   const animate = (now: number) => {
     raf = requestAnimationFrame(animate)
+    // Hero off-screen → skip the whole frame (keep the clock current so the
+    // sim doesn't lurch when it scrolls back into view).
+    if (!heroVisible) { lastT = now; return }
     const dt = Math.min((now - lastT) / 1000, 0.05)
     lastT = now
     assembleT = Math.min(1, assembleT + dt * 0.55)
@@ -461,6 +472,7 @@ function initHero(container: HTMLDivElement, initialText: string) {
   return {
     cleanup: () => {
       cancelAnimationFrame(raf)
+      heroIO.disconnect()
       container.removeEventListener('mousemove', onMouse)
       container.removeEventListener('mouseleave', onLeave)
       container.removeEventListener('click', onClick)
