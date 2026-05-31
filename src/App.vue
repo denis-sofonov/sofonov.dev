@@ -265,7 +265,12 @@ onMounted(() => {
   // Build the ScrollTrigger scrub timelines once the sections (and webfonts)
   // have settled, so each trigger measures the right start/end positions.
   setTimeout(() => setupSectionMotion(), 420)
-  setTimeout(() => ScrollTrigger.refresh(), 1400)
+  // Webfonts change text metrics → section heights → every trigger's start/end.
+  // Refresh exactly when fonts are ready instead of guessing with a fixed
+  // timeout, so this layout-reading pass doesn't land mid-scroll and stall.
+  const refreshWhenReady = () => ScrollTrigger.refresh()
+  if (document.fonts?.ready) document.fonts.ready.then(refreshWhenReady)
+  else setTimeout(refreshWhenReady, 1400)
 })
 
 // ----- scroll snap: one wheel/key gesture = one dock advance ----------------
