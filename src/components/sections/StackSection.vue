@@ -384,10 +384,9 @@ function onToolLeave(tool: string) {
 }
 
 const marqueeItems = computed(() => [
-  t('stack.title'),
   `${t('stack.toggleFront')} · ${t('stack.toggleBack')}`,
   t('mq.goingFullstack'),
-  'msk · 2026',
+  `${frontTools.value.length} · ${t('stack.countLabel')}`,
 ])
 
 // Recompute the cloud rect after a mode/lang swap repaints the node set.
@@ -422,7 +421,7 @@ onUnmounted(() => {
   >
     <SectionMarquee :items="marqueeItems" />
 
-    <SectionHeader sigil="§ 03" :title="t('stack.title')">
+    <SectionHeader :title="t('stack.title')" data-stage>
       <template #meta>
         <span class="sec-meta-k">{{ mode === 'front' ? t('stack.toggleFront') : t('stack.toggleBack') }}</span>
         <span class="sec-meta-v">{{ String(count).padStart(2, '0') }}</span>
@@ -431,7 +430,7 @@ onUnmounted(() => {
 
     <!-- Toolbar — front/back toggle, plus a language sub-rail in backend mode.
          Backend languages still being learned are rendered muted. -->
-    <div class="stk__toolbar">
+    <div class="stk__toolbar" data-stage>
       <div class="stk__toggle" role="tablist">
         <button
           type="button"
@@ -468,6 +467,7 @@ onUnmounted(() => {
       ref="cloudRef"
       class="stk__cloud"
       :class="{ 'has-hot': hoveredTool !== null }"
+      data-stage
     >
       <div class="stk__tools" :key="`${mode}-${activeLang}`">
         <span

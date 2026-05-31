@@ -1,6 +1,5 @@
 <script setup lang="ts">
 defineProps<{
-  sigil: string
   title: string
 }>()
 </script>
@@ -8,8 +7,7 @@ defineProps<{
 <template>
   <header class="sec-head">
     <div class="sec-head__l">
-      <span class="sec-head__sigil">{{ sigil }}</span>
-      <span class="sec-head__sep" aria-hidden="true">/</span>
+      <span class="sec-head__mark" aria-hidden="true" />
       <h2 class="sec-head__title">{{ title }}</h2>
     </div>
     <div class="sec-head__r">
@@ -56,19 +54,14 @@ defineProps<{
   min-width: 0;
 }
 
-.sec-head__sigil {
-  color: var(--accent);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.sec-head__sep {
-  color: var(--muted);
-  opacity: 0.45;
-  font-weight: 300;
+/* Tiny accent tick replaces the §NN number — keeps a dossier marker without
+   the numbering noise. */
+.sec-head__mark {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 2px;
+  background: var(--accent);
+  transform: translateY(-3px);
 }
 
 .sec-head__title {

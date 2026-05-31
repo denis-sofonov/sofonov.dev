@@ -36,20 +36,24 @@ withDefaults(defineProps<{
   right: 0;
   pointer-events: none;
   z-index: 1;
+  /* Ambient texture, not a competing headline — sits back so the section
+     title owns the band. */
+  opacity: 0.5;
 }
 
+/* One shared offset (--marq-x, 0..50, set each frame in App.vue) drives every
+   marquee. translateX runs 0 → -50%; the track is duplicated so the wrap is
+   seamless. Reverse marquees ride the same value from the opposite end, so both
+   directions reverse smoothly together when the scroll direction flips. */
 .marq__loop {
   display: flex;
   width: max-content;
-  animation: marq-flow 56s linear infinite;
+  transform: translate3d(calc(var(--marq-x, 0) * -1%), 0, 0);
+  will-change: transform;
 }
-.marq.is-reverse .marq__loop { animation-direction: reverse; }
-
-/* Direction-aware: when the user scrolls UP, marquees flip — they "follow"
-   the scroll gesture rather than dictate their own motion. The :root flag
-   is set in App.vue from lenis.velocity sign with a small dead zone. */
-:root[data-scroll-dir='up'] .marq__loop { animation-direction: reverse; }
-:root[data-scroll-dir='up'] .marq.is-reverse .marq__loop { animation-direction: normal; }
+.marq.is-reverse .marq__loop {
+  transform: translate3d(calc(var(--marq-x, 0) * 1% - 50%), 0, 0);
+}
 
 .marq__track {
   display: flex;
@@ -75,11 +79,7 @@ withDefaults(defineProps<{
   font-size: 6px;
 }
 
-@keyframes marq-flow {
-  to { transform: translateX(-50%); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .marq__loop { animation: none; }
+  .marq__loop { transform: none; }
 }
 </style>

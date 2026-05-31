@@ -1,96 +1,38 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import gsap from 'gsap'
+import { computed } from 'vue'
 import SectionMarquee from '../SectionMarquee.vue'
 import SectionHeader from '../SectionHeader.vue'
 
-const { t, tm, locale } = useI18n()
+const { t, tm } = useI18n()
 
 interface Item { k: string; v: string; tag: string; level: number }
 const items = computed(() => tm('now.items') as Item[])
 
-const sectionRef = ref<HTMLElement | null>(null)
-const clock = ref('')
-let entered = false
-let clockTimer: number | null = null
-
-function tickClock() {
-  const d = new Date()
-  const pad = (n: number) => String(n).padStart(2, '0')
-  const utc = d.getTime() + d.getTimezoneOffset() * 60_000
-  const msk = new Date(utc + 3 * 60 * 60_000)
-  clock.value = `${pad(msk.getHours())}:${pad(msk.getMinutes())}:${pad(msk.getSeconds())}`
-}
-
 const marqueeItems = computed(() => [
-  t('now.title'),
   t('now.label'),
   t('now.updated'),
-  t('mq.goingFullstack'),
+  'python · php · go',
 ])
-
-onMounted(() => {
-  tickClock()
-  clockTimer = window.setInterval(tickClock, 1000)
-
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      if (e.isIntersecting && !entered) {
-        entered = true
-        runEntrance()
-        io.disconnect()
-      }
-    }
-  }, { threshold: 0.16 })
-  if (sectionRef.value) io.observe(sectionRef.value)
-})
-
-onUnmounted(() => {
-  if (clockTimer != null) clearInterval(clockTimer)
-})
-
-function runEntrance() {
-  const root = sectionRef.value
-  if (!root) return
-  const lead = root.querySelector('.now__lead')
-  if (lead) gsap.fromTo(lead, { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: 'expo.out' })
-  root.querySelectorAll('.now__row').forEach((row, i) => {
-    const base = 0.15 + i * 0.12
-    const top = row.querySelector('.now__row-top')
-    const v = row.querySelector('.now__v')
-    const fill = row.querySelector('.now__meter-fill') as HTMLElement | null
-    const rule = row.querySelector('.now__rule')
-    if (top) gsap.fromTo(top, { x: -12, opacity: 0 }, { x: 0, opacity: 1, duration: 0.55, delay: base, ease: 'power3.out' })
-    if (v) gsap.fromTo(v, { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.75, delay: base + 0.06, ease: 'expo.out' })
-    if (fill) gsap.fromTo(fill, { scaleX: 0 }, { scaleX: 1, duration: 1, delay: base + 0.18, ease: 'power3.out' })
-    if (rule) gsap.fromTo(rule, { scaleX: 0, transformOrigin: 'left center' }, { scaleX: 1, duration: 0.8, delay: base + 0.1, ease: 'power4.out' })
-  })
-}
 </script>
 
 <template>
   <section
     id="now"
-    ref="sectionRef"
     class="now"
     data-snap-segments="1"
     data-snap-vp="1"
   >
     <SectionMarquee :items="marqueeItems" reverse />
 
-    <SectionHeader sigil="§ 05" :title="t('now.title')">
+    <SectionHeader :title="t('now.title')" data-stage>
       <template #meta>
         <span class="now__dot" aria-hidden="true" />
-        <span class="now__clock">msk {{ clock }}</span>
-        <span class="now__sep" aria-hidden="true">·</span>
         <span class="sec-meta-v">{{ t('now.updated') }}</span>
       </template>
     </SectionHeader>
 
-    <p class="now__lead">{{ t('now.lead') }}</p>
-
-    <div class="now__board">
+    <div class="now__board" data-stage>
       <article
         v-for="(item, i) in items"
         :key="i"
@@ -100,7 +42,7 @@ function runEntrance() {
           <span class="now__k">{{ item.k }}</span>
           <span class="now__tag">{{ item.tag }}</span>
         </div>
-        <p class="now__v">{{ item.v }}</p>
+        <p class="now__v" data-gsap-mask data-split="words">{{ item.v }}</p>
         <div class="now__meter" :aria-hidden="true">
           <span class="now__meter-fill" :style="{ '--lvl': item.level }" />
         </div>
@@ -140,27 +82,6 @@ function runEntrance() {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%      { opacity: 0.4; transform: scale(0.6); }
 }
-.now__clock {
-  color: var(--fg);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.06em;
-}
-.now__sep { color: var(--muted); opacity: 0.4; }
-
-.now__lead {
-  margin: 22px 0 0;
-  max-width: 30ch;
-  font-family: var(--font-display);
-  font-size: clamp(20px, 2.6vw, 34px);
-  font-weight: 500;
-  letter-spacing: -0.025em;
-  line-height: 1.15;
-  color: var(--fg);
-  will-change: transform, opacity;
-
-  @media (max-width: 768px) { margin-top: 16px; }
-}
-
 .now__board {
   flex: 1;
   display: flex;

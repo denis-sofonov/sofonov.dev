@@ -57,7 +57,7 @@ function runEntrance() {
   >
     <SectionMarquee :items="marqueeItems" reverse />
 
-    <SectionHeader sigil="§ 03" :title="t('built.title')">
+    <SectionHeader :title="t('built.title')">
       <template #meta>
         <span class="sec-meta-k">{{ t('built.label') }}</span>
         <span class="sec-meta-v">{{ String(items.length).padStart(2, '0') }}</span>

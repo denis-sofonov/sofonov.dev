@@ -1,24 +1,17 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import gsap from 'gsap'
 import SectionMarquee from '../SectionMarquee.vue'
 import SectionHeader from '../SectionHeader.vue'
 import LogoMark from '../LogoMark.vue'
 
 const { t, locale } = useI18n()
 
-const cvHref = '/denis-sofonov-cv.pdf'
-
-const sectionRef = ref<HTMLElement | null>(null)
-const headlineEl = ref<HTMLElement | null>(null)
-const rowEls = ref<HTMLElement[]>([])
 const copiedIdx = ref<number>(-1)
 const hoveredIdx = ref<number>(-1)
 const now = ref<string>('')
 const today = ref<string>('')
 const year = new Date().getFullYear()
-let entered = false
 let clockTimer: number | null = null
 
 const channels = [
@@ -68,7 +61,6 @@ function scrollToTop() {
 }
 
 const marqueeItems = computed(() => [
-  t('contacts.title'),
   '@denis_sofonov',
   t('mq.openToWork'),
   `msk · ${year}`,
@@ -79,56 +71,24 @@ onMounted(() => {
   clockTimer = window.setInterval(tickClock, 1000)
   updateLogoSize()
   window.addEventListener('resize', updateLogoSize)
-
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      if (e.isIntersecting && !entered) {
-        entered = true
-        runEntrance()
-        io.disconnect()
-      }
-    }
-  }, { threshold: 0.2 })
-  if (sectionRef.value) io.observe(sectionRef.value)
 })
 
 onUnmounted(() => {
   if (clockTimer != null) clearInterval(clockTimer)
   window.removeEventListener('resize', updateLogoSize)
 })
-
-function runEntrance() {
-  const tl = gsap.timeline()
-  const logo = sectionRef.value?.querySelector('.cnt__logo')
-  const avail = sectionRef.value?.querySelector('.cnt__avail')
-  const headline = sectionRef.value?.querySelector('.cnt__headline')
-  const lead = sectionRef.value?.querySelector('.cnt__lead')
-  const rows = rowEls.value.filter(Boolean)
-  const foot = sectionRef.value?.querySelector('.cnt__foot')
-
-  // Varied easings per element — logo snaps with back.out (declarative mark
-  // arrival), headline lifts with expo.out (editorial gravitas), rows stagger
-  // with power2 (functional list), avail/foot just fade (metadata).
-  if (avail)    tl.fromTo(avail,    { y: -10, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'sine.out' }, 0)
-  if (logo)     tl.fromTo(logo,     { scale: 0.4, opacity: 0, rotation: -18 }, { scale: 1, opacity: 1, rotation: 0, duration: 1.1, ease: 'back.out(1.8)' }, 0.05)
-  if (headline) tl.fromTo(headline, { y: 32, opacity: 0 }, { y: 0, opacity: 1, duration: 0.95, ease: 'expo.out' }, 0.3)
-  if (lead)     tl.fromTo(lead,     { y: 12, opacity: 0 }, { y: 0, opacity: 0.78, duration: 0.7, ease: 'power2.out' }, 0.55)
-  if (rows.length) tl.fromTo(rows,  { x: -14, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, stagger: 0.09, ease: 'power3.out' }, 0.75)
-  if (foot)     tl.fromTo(foot,     { opacity: 0 }, { opacity: 1, duration: 0.7, ease: 'sine.out' }, 1.1)
-}
 </script>
 
 <template>
   <section
     id="contacts"
-    ref="sectionRef"
     class="cnt"
     data-snap-segments="1"
     data-snap-vp="1"
   >
     <SectionMarquee :items="marqueeItems" />
 
-    <SectionHeader sigil="§ 06" :title="t('contacts.title')">
+    <SectionHeader :title="t('contacts.title')" data-stage>
       <template #meta>
         <span class="sec-meta-k">{{ t('contacts.metaK') }}</span>
         <span class="sec-meta-v">{{ t('contacts.metaV') }}</span>
@@ -147,12 +107,12 @@ function runEntrance() {
     </div>
 
     <!-- The coda — animated logo as the visual arrival point. -->
-    <div class="cnt__stage">
+    <div class="cnt__stage" data-stage>
       <div class="cnt__logo">
         <LogoMark :size="logoSize" :spin-duration="logoSpin" :spike-count="12" />
       </div>
 
-      <h3 ref="headlineEl" class="cnt__headline">{{ t('contacts.headline') }}</h3>
+      <h3 class="cnt__headline" data-gsap-mask data-split="words">{{ t('contacts.headline') }}</h3>
 
       <p class="cnt__lead">{{ t('contacts.lead') }}</p>
 
@@ -160,7 +120,6 @@ function runEntrance() {
         <li
           v-for="(c, i) in channels"
           :key="c.key"
-          :ref="(el) => { if (el) rowEls[i] = el as HTMLElement }"
           class="cnt-row"
           :class="{ 'is-hot': hoveredIdx === i, 'is-dim': hoveredIdx !== -1 && hoveredIdx !== i }"
           @pointerenter="hoveredIdx = i"
@@ -198,9 +157,9 @@ function runEntrance() {
     <!-- Bottom strip — colophon + back-to-top -->
     <footer class="cnt__foot">
       <div class="cnt__foot-l">
-        <a class="cnt__cv" :href="cvHref" download>
-          <span class="cnt__cv-ic" aria-hidden="true">↓</span>{{ t('cvLabel') }}
-        </a>
+        <RouterLink class="cnt__cv" to="/resume">
+          <span class="cnt__cv-ic" aria-hidden="true">→</span>{{ t('viewResume') }}
+        </RouterLink>
         <span class="cnt__foot-sep">·</span>
         <span class="cnt__foot-mark">©</span>
         <span class="cnt__foot-year">{{ year }}</span>
@@ -359,8 +318,8 @@ function runEntrance() {
   .cnt__rows:has(.is-hot) &.is-dim { opacity: 0.35; }
 
   @media (max-width: 640px) {
-    grid-template-columns: 28px 64px minmax(0, 1fr) 28px;
-    gap: 12px;
+    grid-template-columns: 24px 56px minmax(0, 1fr) 26px;
+    gap: 10px;
     padding: 12px 4px;
   }
 }
@@ -388,6 +347,7 @@ function runEntrance() {
   display: inline-flex;
   align-items: baseline;
   gap: 12px;
+  min-width: 0;
   font-family: var(--font-display);
   font-size: clamp(18px, 1.8vw, 24px);
   font-weight: 500;
@@ -398,6 +358,14 @@ function runEntrance() {
   transition: color 0.3s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 
   &:hover { color: var(--accent); }
+
+  /* Long values (the email) must never crowd the copy button on narrow
+     screens — drop the size and let the address wrap rather than overflow. */
+  @media (max-width: 640px) {
+    font-size: clamp(13px, 3.5vw, 17px);
+    gap: 8px;
+    overflow-wrap: anywhere;
+  }
 }
 .cnt-row.is-hot .cnt-row__v {
   color: var(--accent);

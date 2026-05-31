@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { computed, onMounted, ref } from 'vue'
-import gsap from 'gsap'
 import SectionMarquee from '../SectionMarquee.vue'
 import SectionHeader from '../SectionHeader.vue'
 
@@ -27,11 +26,7 @@ const FALLBACK_STARS: Record<string, number> = { 'DDD-with-Nuxt': 3, 'sosna': 0 
 const stars = ref<Record<string, number>>({ ...FALLBACK_STARS })
 function starsFor(repo: string) { return stars.value[repo] ?? 0 }
 
-const sectionRef = ref<HTMLElement | null>(null)
-let entered = false
-
 const marqueeItems = computed(() => [
-  t('projects.title'),
   t('projects.label'),
   t('projects.hint'),
   t('mq.projTags'),
@@ -50,55 +45,26 @@ async function loadStars() {
 
 onMounted(() => {
   loadStars()
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      if (e.isIntersecting && !entered) {
-        entered = true
-        runEntrance()
-        io.disconnect()
-      }
-    }
-  }, { threshold: 0.12 })
-  if (sectionRef.value) io.observe(sectionRef.value)
 })
-
-function runEntrance() {
-  const root = sectionRef.value
-  if (!root) return
-  root.querySelectorAll('.prj-feat').forEach((feat, i) => {
-    const base = i * 0.16
-    const num   = feat.querySelector('.prj-feat__n')
-    const head  = feat.querySelectorAll('.prj-feat__title, .prj-feat__tagline')
-    const body  = feat.querySelectorAll('.prj-feat__desc, .prj-feat__tags, .prj-feat__foot')
-    const layers = feat.querySelectorAll('.prj-onion__layer, .prj-onion__core')
-    const lines = feat.querySelectorAll('.prj-term__line')
-    if (num)  gsap.fromTo(num, { opacity: 0, scale: 0.8, transformOrigin: 'left center' }, { opacity: 1, scale: 1, duration: 0.85, delay: base, ease: 'back.out(1.7)' })
-    gsap.fromTo(head, { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, delay: base + 0.08, ease: 'expo.out', stagger: 0.08 })
-    gsap.fromTo(body, { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, delay: base + 0.24, ease: 'power2.out', stagger: 0.07 })
-    if (layers.length) gsap.fromTo(layers, { scale: 0.5, opacity: 0, transformOrigin: 'center' }, { scale: 1, opacity: 1, duration: 0.7, delay: base + 0.2, ease: 'back.out(1.6)', stagger: 0.1 })
-    if (lines.length) gsap.fromTo(lines, { x: -10, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, delay: base + 0.2, ease: 'power2.out', stagger: 0.09 })
-  })
-}
 </script>
 
 <template>
   <section
     id="projects"
-    ref="sectionRef"
     class="prj"
     data-snap-segments="1"
     data-snap-vp="1"
   >
     <SectionMarquee :items="marqueeItems" />
 
-    <SectionHeader sigil="§ 04" :title="t('projects.title')">
+    <SectionHeader :title="t('projects.title')" data-stage>
       <template #meta>
         <span class="sec-meta-k">{{ t('projects.label') }}</span>
         <span class="sec-meta-v">{{ String(featured.length).padStart(2, '0') }}</span>
       </template>
     </SectionHeader>
 
-    <div class="prj__feed">
+    <div class="prj__feed" data-stage>
       <article
         v-for="(f, i) in featured"
         :key="f.repo"
@@ -107,7 +73,7 @@ function runEntrance() {
       >
         <div class="prj-feat__content">
           <span class="prj-feat__n" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
-          <h3 class="prj-feat__title">{{ f.title }}</h3>
+          <h3 class="prj-feat__title" data-gsap-mask data-split="words">{{ f.title }}</h3>
           <p class="prj-feat__tagline">{{ f.tagline }}</p>
           <p class="prj-feat__desc">{{ f.desc }}</p>
           <ul class="prj-feat__tags">
@@ -147,7 +113,7 @@ function runEntrance() {
       </article>
     </div>
 
-    <a :href="ghUrl" target="_blank" rel="noopener" class="prj__more">
+    <a :href="ghUrl" target="_blank" rel="noopener" class="prj__more" data-stage>
       {{ t('projects.more') }} <span aria-hidden="true">↗</span>
     </a>
   </section>

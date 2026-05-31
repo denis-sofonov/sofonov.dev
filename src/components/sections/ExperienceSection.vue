@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { computed, onMounted, ref } from 'vue'
-import gsap from 'gsap'
+import { computed, ref } from 'vue'
 import SectionMarquee from '../SectionMarquee.vue'
 import SectionHeader from '../SectionHeader.vue'
 
@@ -20,61 +19,27 @@ interface Item {
 }
 const items = computed(() => tm('experience.items') as Item[])
 
-const sectionRef = ref<HTMLElement | null>(null)
-const rowEls = ref<HTMLElement[]>([])
 const hoveredIdx = ref<number>(-1)
-let entered = false
 
+// Marquee carries context, not the title — the header already names the
+// section, so repeating it here just doubled up.
 const marqueeItems = computed(() => [
-  t('experience.title'),
   `${t('experience.label')} · ${String(items.value.length).padStart(2, '0')}`,
   t('mq.leadFullstack'),
   t('mq.yrsProd'),
 ])
-
-onMounted(() => {
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      if (e.isIntersecting && !entered) {
-        entered = true
-        runEntrance()
-        io.disconnect()
-      }
-    }
-  }, { threshold: 0.14 })
-  if (sectionRef.value) io.observe(sectionRef.value)
-})
-
-function runEntrance() {
-  rowEls.value.filter(Boolean).forEach((row, i) => {
-    const node  = row.querySelector('.exp__node')
-    const spine = row.querySelector('.exp__spine')
-    const rail  = row.querySelectorAll('.exp__tag, .exp__period, .exp__duration')
-    const org   = row.querySelector('.exp__org')
-    const text  = row.querySelectorAll('.exp__summary, .exp__points, .exp__stack')
-    const rule  = row.querySelector('.exp__rule')
-    const base  = i * 0.13
-    if (spine) gsap.fromTo(spine, { scaleY: 0, transformOrigin: 'top center' }, { scaleY: 1, duration: 0.7, delay: base, ease: 'power3.out' })
-    if (node)  gsap.fromTo(node,  { scale: 0, opacity: 0, transformOrigin: 'center' }, { scale: 1, opacity: 1, duration: 0.6, delay: base + 0.15, ease: 'back.out(2.2)' })
-    gsap.fromTo(rail, { opacity: 0, x: -8 }, { opacity: 1, x: 0, duration: 0.6, delay: base + 0.1, ease: 'power2.out', stagger: 0.05 })
-    if (org)  gsap.fromTo(org,  { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: 0.85, delay: base + 0.12, ease: 'expo.out' })
-    gsap.fromTo(text, { y: 10, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, delay: base + 0.24, ease: 'power2.out', stagger: 0.05 })
-    if (rule) gsap.fromTo(rule, { scaleX: 0, transformOrigin: 'left center' }, { scaleX: 1, duration: 0.8, delay: base + 0.32, ease: 'power4.out' })
-  })
-}
 </script>
 
 <template>
   <section
     id="experience"
-    ref="sectionRef"
     class="exp"
     data-snap-segments="1"
     data-snap-vp="1"
   >
     <SectionMarquee :items="marqueeItems" />
 
-    <SectionHeader sigil="§ 02" :title="t('experience.title')">
+    <SectionHeader :title="t('experience.title')" data-stage>
       <template #meta>
         <span class="sec-meta-k">{{ t('experience.label') }}</span>
         <span class="sec-meta-v">{{ String(items.length).padStart(2, '0') }}</span>
@@ -84,11 +49,10 @@ function runEntrance() {
     <!-- Career timeline — a vertical spine threads the roles, newest on top
          with a live node. Each entry: period anchor + sector on the rail, then
          org, role, a one-line summary, achievement bullets and the stack. -->
-    <div class="exp__ledger" :class="{ 'has-hover': hoveredIdx !== -1 }">
+    <div class="exp__ledger" :class="{ 'has-hover': hoveredIdx !== -1 }" data-stage>
       <article
         v-for="(item, i) in items"
         :key="i"
-        :ref="(el) => { if (el) rowEls[i] = el as HTMLElement }"
         class="exp__row"
         :class="{ 'is-hot': hoveredIdx === i, 'is-dim': hoveredIdx !== -1 && hoveredIdx !== i, 'is-now': i === 0 }"
         @pointerenter="hoveredIdx = i"
@@ -105,7 +69,7 @@ function runEntrance() {
 
         <div class="exp__main">
           <div class="exp__head">
-            <h3 class="exp__org">{{ item.org }}</h3>
+            <h3 class="exp__org" data-gsap-mask data-split="words">{{ item.org }}</h3>
             <span class="exp__note">{{ item.orgNote }}</span>
             <span class="exp__role">{{ item.role }}</span>
           </div>
