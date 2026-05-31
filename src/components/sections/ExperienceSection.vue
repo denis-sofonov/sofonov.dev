@@ -168,7 +168,6 @@ const marqueeItems = computed(() => [
   bottom: 0;
   width: 1px;
   background: var(--border);
-  will-change: transform;
 }
 /* the thread runs from the newest node down to the oldest — no dangling ends */
 .exp__row.is-now .exp__spine { top: 50%; }
@@ -182,7 +181,6 @@ const marqueeItems = computed(() => [
   border-radius: 50%;
   background: var(--muted);
   transform: translateY(-50%);
-  will-change: transform, opacity;
   z-index: 1;
 }
 .exp__row.is-now .exp__node {
@@ -216,7 +214,6 @@ const marqueeItems = computed(() => [
   text-transform: uppercase;
   color: var(--accent);
   opacity: 0.85;
-  will-change: transform, opacity;
 }
 .exp__period {
   font-family: var(--font-display);
@@ -227,7 +224,6 @@ const marqueeItems = computed(() => [
   color: var(--fg);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  will-change: transform, opacity;
 
   @media (max-width: 768px) { font-size: 22px; }
 }
@@ -238,7 +234,6 @@ const marqueeItems = computed(() => [
   text-transform: lowercase;
   color: var(--muted);
   opacity: 0.7;
-  will-change: transform, opacity;
 }
 
 /* ── MAIN — org, role, summary, points, stack ────────────────────── */
@@ -259,7 +254,6 @@ const marqueeItems = computed(() => [
   letter-spacing: -0.03em;
   line-height: 0.95;
   color: var(--fg);
-  will-change: transform, opacity;
 }
 .exp__note {
   font-family: var(--font-mono);

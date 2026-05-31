@@ -185,7 +185,6 @@ onMounted(() => {
   color: var(--accent);
   font-variant-numeric: tabular-nums;
   margin-bottom: 10px;
-  will-change: transform, opacity;
 }
 .prj-feat__title {
   margin: 0;
@@ -195,7 +194,6 @@ onMounted(() => {
   letter-spacing: -0.035em;
   line-height: 0.98;
   color: var(--fg);
-  will-change: transform, opacity;
 }
 .prj-feat__tagline {
   margin: 8px 0 0;
@@ -204,7 +202,6 @@ onMounted(() => {
   letter-spacing: 0.04em;
   text-transform: lowercase;
   color: var(--accent);
-  will-change: transform, opacity;
 }
 .prj-feat__desc {
   margin: 16px 0 0;
@@ -213,7 +210,6 @@ onMounted(() => {
   color: var(--fg);
   opacity: 0.78;
   max-width: 52ch;
-  will-change: transform, opacity;
 }
 .prj-feat__tags {
   list-style: none;
@@ -222,7 +218,6 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
-  will-change: transform, opacity;
 }
 .prj-feat__tag {
   font-family: var(--font-mono);
@@ -239,7 +234,6 @@ onMounted(() => {
   align-items: center;
   gap: 20px;
   margin-top: 22px;
-  will-change: transform, opacity;
 }
 .prj-feat__stars {
   font-family: var(--font-mono);
@@ -279,7 +273,6 @@ onMounted(() => {
   border-radius: 18px;
   display: flex;
   justify-content: center;
-  will-change: transform, opacity;
 }
 .prj-onion__layer {
   border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
@@ -340,7 +333,7 @@ onMounted(() => {
   font-size: 12.5px;
   line-height: 1.85;
 }
-.prj-term__line { margin: 0; color: var(--fg); white-space: nowrap; will-change: transform, opacity; b { color: var(--fg); font-weight: 500; } }
+.prj-term__line { margin: 0; color: var(--fg); white-space: nowrap; b { color: var(--fg); font-weight: 500; } }
 .prj-term__prompt { color: var(--accent); }
 .prj-term__q { color: var(--muted); }
 .prj-term__ok { color: var(--accent); }

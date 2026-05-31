@@ -114,7 +114,6 @@ const marqueeItems = computed(() => [
   align-items: baseline;
   justify-content: space-between;
   gap: 14px;
-  will-change: transform, opacity;
 }
 .now__k {
   font-family: var(--font-mono);
@@ -141,7 +140,6 @@ const marqueeItems = computed(() => [
   line-height: 1.1;
   color: var(--fg);
   max-width: 40ch;
-  will-change: transform, opacity;
 
   @media (max-width: 1279px) { font-size: clamp(17px, 2.2vw, 26px); }
 }
@@ -160,7 +158,6 @@ const marqueeItems = computed(() => [
   width: calc(var(--lvl, 0.5) * 100%);
   background: var(--accent);
   transform-origin: left center;
-  will-change: transform;
 }
 
 .now__rule {
