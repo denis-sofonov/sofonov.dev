@@ -14,10 +14,11 @@ export default defineConfig({
       output: {
         // Split the heavy, rarely-changing libraries into their own cacheable
         // chunks so the app code stays small and a redeploy doesn't bust the
-        // three.js / gsap caches.
-        manualChunks: {
-          three: ['three'],
-          motion: ['gsap', 'lenis'],
+        // three.js / gsap caches. Function form so it's a no-op in the SSG
+        // server build (where these are externalised, not chunked).
+        manualChunks(id) {
+          if (id.includes('node_modules/three')) return 'three'
+          if (id.includes('node_modules/gsap') || id.includes('node_modules/lenis')) return 'motion'
         },
       },
     },

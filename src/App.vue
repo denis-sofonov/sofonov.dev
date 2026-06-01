@@ -18,10 +18,10 @@ const router = useRouter()
 const route = useRoute()
 
 function syncPageMeta() {
+  if (typeof document === 'undefined') return
   document.title = t('pageTitle')
   document.documentElement.setAttribute('lang', locale.value)
 }
-syncPageMeta()
 watch(locale, syncPageMeta)
 
 function getSystemTheme(): string {
@@ -30,13 +30,20 @@ function getSystemTheme(): string {
   return 'light'
 }
 
-const currentTheme = getSystemTheme()
-const isDark = ref(currentTheme === 'dark')
-document.documentElement.setAttribute('data-theme', currentTheme)
+const isDark = ref(false)
 
-const savedLocale = localStorage.getItem('locale')
-if (savedLocale) {
-  locale.value = savedLocale
+// Browser-only bootstrap — skipped during SSG prerender (no DOM/localStorage in
+// Node). Theme is also applied pre-paint by an inline script in index.html, so
+// there's no flash before this runs on hydration.
+if (typeof window !== 'undefined') {
+  syncPageMeta()
+  const currentTheme = getSystemTheme()
+  isDark.value = currentTheme === 'dark'
+  document.documentElement.setAttribute('data-theme', currentTheme)
+  const savedLocale = localStorage.getItem('locale')
+  if (savedLocale) {
+    locale.value = savedLocale
+  }
 }
 
 function toggleLocale() {
