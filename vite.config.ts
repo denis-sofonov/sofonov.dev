@@ -2,6 +2,11 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
+  // vite-ssg: emit each route as <route>/index.html so a plain static nginx
+  // serves /resume → /resume/ → index.html without any try_files config.
+  ssgOptions: {
+    dirStyle: 'nested',
+  },
   css: {
     preprocessorOptions: {
       scss: {
