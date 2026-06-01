@@ -3,6 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Apply theme before first paint so prerendered pages don't flash. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('theme') || 'light'
+          document.documentElement.setAttribute('data-theme', t)
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light')
+        }
+      })()
+    </script>
     <title>denis sofonov — fullstack developer</title>
     <meta name="description" content="Fullstack developer, Moscow. 4+ years. Lead frontend in Vue 3 / Nuxt and React / Next, going wide on the backend — Node, Python, Go, PHP, Ruby. I architect products end to end." />
     <meta name="author" content="Denis Sofonov" />
