@@ -12,9 +12,13 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
-      - run: npm ci
+      # npm install (not ci): the lockfile carries platform/npm-version-specific
+      # optional native deps (emnapi/wasm fallbacks) that trip ci's strict check
+      # across npm versions. install reconciles them and stays reproducible enough
+      # for a static build.
+      - run: npm install --no-audit --no-fund
       - run: npm run build
 
       # Deploy via FTP to Reg.ru
