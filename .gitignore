@@ -11,3 +11,7 @@ dist
 *.pdf
 .idea/
 .mcp.json
+
+# ...but static assets in public/ must ship with the build (override the
+# blanket *.png/*.jpg/*.pdf ignores above) — photo, CV, org logos.
+!public/**

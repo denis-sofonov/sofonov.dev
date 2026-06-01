@@ -30,7 +30,3 @@ jobs:
           password: ${{ secrets.FTP_PASS }}
           local-dir: ./dist/
           server-dir: /www/sofonov.dev/
-          # One-shot full re-upload: the sync-state drifted and binaries
-          # (photo/pdf/logos) were marked deployed but missing on the server.
-          # Wipes + re-uploads everything to get back in sync. Remove after.
-          dangerous-clean-slate: true
