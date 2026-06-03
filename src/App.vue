@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { RouterView, RouterLink, useRouter, useRoute } from 'vue-router'
+import { useHead } from '@unhead/vue'
 import Lenis from 'lenis'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -17,12 +18,40 @@ const { t, locale } = useI18n()
 const router = useRouter()
 const route = useRoute()
 
-function syncPageMeta() {
-  if (typeof document === 'undefined') return
-  document.title = t('pageTitle')
-  document.documentElement.setAttribute('lang', locale.value)
-}
-watch(locale, syncPageMeta)
+// Bind locale synchronously from the route so each prerendered page renders in
+// its own language (the i18n instance is a shared singleton across vite-ssg's
+// per-route renders, so a reactive guard alone leaks the last value into the
+// head). The main.ts guard handles locale on client-side navigation.
+locale.value = (route.meta.locale as 'en' | 'ru' | undefined) ?? 'en'
+
+// ── SEO head — localized per route, with EN/RU hreflang alternates ──────────
+const SITE = 'https://sofonov.dev'
+// Page identity with the /ru prefix stripped: '' (home) or '/resume'.
+const pageKey = computed(() => route.path.replace(/\/+$/, '').replace(/^\/ru(?=\/|$)/, ''))
+const enHref = computed(() => SITE + (pageKey.value === '' ? '/' : pageKey.value + '/'))
+const ruHref = computed(() => SITE + (pageKey.value === '' ? '/ru/' : '/ru' + pageKey.value + '/'))
+const canonicalHref = computed(() => (locale.value === 'ru' ? ruHref.value : enHref.value))
+
+useHead({
+  title: () => t('pageTitle'),
+  htmlAttrs: { lang: () => locale.value },
+  meta: [
+    { name: 'description', content: () => t('metaDescription') },
+    { property: 'og:title', content: () => t('pageTitle') },
+    { property: 'og:description', content: () => t('ogDescription') },
+    { property: 'og:url', content: () => canonicalHref.value },
+    { property: 'og:locale', content: () => (locale.value === 'ru' ? 'ru_RU' : 'en_US') },
+    { property: 'og:locale:alternate', content: () => (locale.value === 'ru' ? 'en_US' : 'ru_RU') },
+    { name: 'twitter:title', content: () => t('pageTitle') },
+    { name: 'twitter:description', content: () => t('ogDescription') },
+  ],
+  link: [
+    { rel: 'canonical', href: () => canonicalHref.value },
+    { rel: 'alternate', hreflang: 'en', href: () => enHref.value },
+    { rel: 'alternate', hreflang: 'ru', href: () => ruHref.value },
+    { rel: 'alternate', hreflang: 'x-default', href: () => enHref.value },
+  ],
+})
 
 function getSystemTheme(): string {
   const saved = localStorage.getItem('theme')
@@ -36,19 +65,18 @@ const isDark = ref(false)
 // Node). Theme is also applied pre-paint by an inline script in index.html, so
 // there's no flash before this runs on hydration.
 if (typeof window !== 'undefined') {
-  syncPageMeta()
   const currentTheme = getSystemTheme()
   isDark.value = currentTheme === 'dark'
   document.documentElement.setAttribute('data-theme', currentTheme)
-  const savedLocale = localStorage.getItem('locale')
-  if (savedLocale) {
-    locale.value = savedLocale
-  }
 }
 
 function toggleLocale() {
-  locale.value = locale.value === 'en' ? 'ru' : 'en'
-  localStorage.setItem('locale', locale.value)
+  // Switch language by navigating to the sibling URL — the route guard flips
+  // the locale, so URL and content stay in sync (and each lang is bookmarkable).
+  const target = locale.value === 'en'
+    ? (pageKey.value === '' ? '/ru' : '/ru' + pageKey.value)
+    : (pageKey.value === '' ? '/' : pageKey.value)
+  router.push(target)
 }
 
 function toggleTheme() {

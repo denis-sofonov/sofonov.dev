@@ -19,7 +19,7 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
-    "@unhead/vue": "^3.1.1",
+    "@unhead/vue": "^2.1.15",
     "@vitejs/plugin-vue": "^5.2.3",
     "playwright": "^1.59.1",
     "sass-embedded": "^1.87.0",

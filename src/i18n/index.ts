@@ -30,16 +30,17 @@ const messages = {
       more: 'all repos on github',
       onion: { ui: 'ui', infra: 'infrastructure', app: 'application', domain: 'domain' },
       featured: [
-        {
-          repo: 'DDD-with-Nuxt',
-          title: 'DDD-with-Nuxt',
-          tagline: 'Clean Architecture starter for Nuxt 4',
-          desc: 'A production-shaped template that brings Bounded Contexts, CQRS, Sagas, Domain Events and Ports & Adapters into a Nuxt app — the patterns that keep a big frontend sane as it grows.',
-          tags: ['Bounded Contexts', 'CQRS', 'Saga', 'Ports & Adapters', 'Domain Events', 'Onion layers'],
-          visual: 'onion',
-          url: 'https://github.com/denis-sofonov/DDD-with-Nuxt',
-          demo: 'https://ddd-with-nuxt.vercel.app/',
-        },
+        // Temporarily hidden — restore when ready.
+        // {
+        //   repo: 'DDD-with-Nuxt',
+        //   title: 'DDD-with-Nuxt',
+        //   tagline: 'Clean Architecture starter for Nuxt 4',
+        //   desc: 'A production-shaped template that brings Bounded Contexts, CQRS, Sagas, Domain Events and Ports & Adapters into a Nuxt app — the patterns that keep a big frontend sane as it grows.',
+        //   tags: ['Bounded Contexts', 'CQRS', 'Saga', 'Ports & Adapters', 'Domain Events', 'Onion layers'],
+        //   visual: 'onion',
+        //   url: 'https://github.com/denis-sofonov/DDD-with-Nuxt',
+        //   demo: 'https://ddd-with-nuxt.vercel.app/',
+        // },
         {
           repo: 'sosna',
           title: 'sosna',
@@ -49,6 +50,16 @@ const messages = {
           visual: 'terminal',
           url: 'https://github.com/denis-sofonov/sosna',
           demo: 'https://denis-sofonov-sosna.vercel.app/',
+        },
+        {
+          repo: 't12n',
+          title: 't12n',
+          tagline: 'Runtime validation from your TypeScript types',
+          desc: 'A tiny build plugin (Vite, webpack, Rollup, esbuild, Rspack) that turns your TypeScript types into runtime validators — annotate the data crossing a boundary and the schemas, checks and errors write themselves.',
+          tags: ['unplugin', 'Vite', 'Rollup', 'esbuild', 'runtime validation', 'type-driven'],
+          visual: 'transform',
+          url: 'https://github.com/denis-sofonov/t12n',
+          demo: 'https://t12n.vercel.app',
         },
       ],
     },
@@ -97,6 +108,8 @@ const messages = {
       dark: 'dark',
     },
     pageTitle: 'denis sofonov — fullstack developer',
+    metaDescription: 'Fullstack developer, Moscow. 4+ years. Lead frontend in Vue 3 / Nuxt and React / Next, going wide on the backend — Node, Python, Go, PHP, Ruby. I architect products end to end.',
+    ogDescription: 'Lead frontend going fullstack. Vue, Nuxt, React, Node — and Python, Go, PHP, Ruby. Open to offers.',
     fullName: 'Denis Sofonov',
     name: 'hi, i\'m\ndenis',
     role: 'fullstack developer',
@@ -336,16 +349,17 @@ const messages = {
       more: 'все репозитории на github',
       onion: { ui: 'ui', infra: 'инфраструктура', app: 'приложение', domain: 'домен' },
       featured: [
-        {
-          repo: 'DDD-with-Nuxt',
-          title: 'DDD-with-Nuxt',
-          tagline: 'Clean Architecture стартер для Nuxt 4',
-          desc: 'Боевой шаблон, который приносит в Nuxt Bounded Contexts, CQRS, саги, доменные события и Ports & Adapters — паттерны, что держат большой фронтенд в порядке по мере роста.',
-          tags: ['Bounded Contexts', 'CQRS', 'Saga', 'Ports & Adapters', 'Domain Events', 'Onion layers'],
-          visual: 'onion',
-          url: 'https://github.com/denis-sofonov/DDD-with-Nuxt',
-          demo: 'https://ddd-with-nuxt.vercel.app/',
-        },
+        // Temporarily hidden — restore when ready.
+        // {
+        //   repo: 'DDD-with-Nuxt',
+        //   title: 'DDD-with-Nuxt',
+        //   tagline: 'Clean Architecture стартер для Nuxt 4',
+        //   desc: 'Боевой шаблон, который приносит в Nuxt Bounded Contexts, CQRS, саги, доменные события и Ports & Adapters — паттерны, что держат большой фронтенд в порядке по мере роста.',
+        //   tags: ['Bounded Contexts', 'CQRS', 'Saga', 'Ports & Adapters', 'Domain Events', 'Onion layers'],
+        //   visual: 'onion',
+        //   url: 'https://github.com/denis-sofonov/DDD-with-Nuxt',
+        //   demo: 'https://ddd-with-nuxt.vercel.app/',
+        // },
         {
           repo: 'sosna',
           title: 'sosna',
@@ -355,6 +369,16 @@ const messages = {
           visual: 'terminal',
           url: 'https://github.com/denis-sofonov/sosna',
           demo: 'https://denis-sofonov-sosna.vercel.app/',
+        },
+        {
+          repo: 't12n',
+          title: 't12n',
+          tagline: 'Рантайм-валидация прямо из твоих TypeScript-типов',
+          desc: 'Крошечный build-плагин (Vite, webpack, Rollup, esbuild, Rspack), который превращает TypeScript-типы в рантайм-валидаторы — размечаешь данные на границе, а схемы, проверки и ошибки пишутся сами.',
+          tags: ['unplugin', 'Vite', 'Rollup', 'esbuild', 'рантайм-валидация', 'type-driven'],
+          visual: 'transform',
+          url: 'https://github.com/denis-sofonov/t12n',
+          demo: 'https://t12n.vercel.app',
         },
       ],
     },
@@ -403,6 +427,8 @@ const messages = {
       dark: 'тёмная',
     },
     pageTitle: 'денис софонов — fullstack-разработчик',
+    metaDescription: 'Фулстек-разработчик, Москва. 4+ года. Лид-фронтенд на Vue 3 / Nuxt и React / Next, расту вширь по бэкенду — Node, Python, Go, PHP, Ruby. Веду продукт от идеи до деплоя.',
+    ogDescription: 'Лид-фронтенд, иду в фулстек. Vue, Nuxt, React, Node — и Python, Go, PHP, Ruby. Открыт к офферам.',
     fullName: 'Денис Софонов',
     name: 'привет,\nя денис',
     role: 'fullstack-разработчик',
@@ -615,9 +641,14 @@ const messages = {
   },
 }
 
-export default createI18n({
-  legacy: false,
-  locale: 'en',
-  fallbackLocale: 'en',
-  messages,
-})
+// A fresh instance per app — vite-ssg renders every route in the same Node
+// process, so a shared singleton would leak one page's locale into another's
+// head. Created inside the ViteSSG setup (see main.ts) instead.
+export function createAppI18n() {
+  return createI18n({
+    legacy: false,
+    locale: 'en',
+    fallbackLocale: 'en',
+    messages,
+  })
+}

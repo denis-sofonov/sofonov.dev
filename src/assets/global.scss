@@ -15,6 +15,21 @@ html.lenis, html.lenis body {
   height: auto;
 }
 
+// Screen-reader / crawler only — present in the DOM and read by assistive tech
+// and search engines, visually removed. Used for the hero name heading, which
+// is otherwise drawn on a WebGL canvas and invisible to both.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .lenis.lenis-smooth {
   scroll-behavior: auto !important;
 }
@@ -94,6 +109,14 @@ html.is-ready .progress-bar::after {
 }
 html.is-ready [data-entrance] {
   animation: entrance-reveal var(--entrance-duration) cubic-bezier(0.22, 1, 0.36, 1) var(--entrance-delay) forwards;
+}
+// Prerendered HTML paints the raw text fully visible for a frame before
+// splitText tokenises it (worst in prod). Keep split-entrance text hidden
+// until the split lands — the mask tokens then own visibility (they sit
+// off-screen at --reveal:0). Guarded by .js-anim so no-JS clients still
+// render the text. data-split-applied is stamped by splitText().
+html.js-anim [data-entrance][data-split]:not([data-split-applied]) {
+  visibility: hidden;
 }
 @keyframes entrance-reveal {
   from { --reveal: 0; }

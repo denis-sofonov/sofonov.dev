@@ -15,7 +15,7 @@ interface Feature {
   tagline: string
   desc: string
   tags: string[]
-  visual: 'onion' | 'terminal'
+  visual: 'onion' | 'terminal' | 'transform'
   url: string
   demo: string
 }
@@ -96,7 +96,7 @@ onMounted(() => {
           </div>
 
           <!-- scaffolding terminal -->
-          <div v-else class="prj-term" aria-hidden="true">
+          <div v-else-if="f.visual === 'terminal'" class="prj-term" aria-hidden="true">
             <div class="prj-term__bar">
               <span class="prj-term__dot" /><span class="prj-term__dot" /><span class="prj-term__dot" />
               <span class="prj-term__name">sosna — zsh</span>
@@ -107,6 +107,35 @@ onMounted(() => {
               <p class="prj-term__line prj-term__q">◇ state · router › <b>pinia · yes</b></p>
               <p class="prj-term__line prj-term__ok">✓ scaffolded 14 files</p>
               <p class="prj-term__line"><span class="prj-term__prompt">→</span> cd app &amp;&amp; pnpm dev<span class="prj-term__cursor" /></p>
+            </div>
+          </div>
+
+          <!-- t12n: a TypeScript type compiles down into a runtime guard -->
+          <div v-else class="prj-t12n" aria-hidden="true">
+            <!-- source: the type you annotate -->
+            <div class="prj-t12n__panel">
+              <span class="prj-t12n__tag">type</span>
+              <p class="prj-t12n__ln"><b>type</b> User = {</p>
+              <p class="prj-t12n__ln prj-t12n__ln--in">id: <b>number</b></p>
+              <p class="prj-t12n__ln prj-t12n__ln--in">email: <b>string</b></p>
+              <p class="prj-t12n__ln">}</p>
+            </div>
+
+            <!-- build seam: where t12n injects the check -->
+            <div class="prj-t12n__seam">
+              <i class="prj-t12n__pulse" />
+              <span class="prj-t12n__badge">t12n · build</span>
+              <span class="prj-t12n__caret">↓</span>
+            </div>
+
+            <!-- runtime: the generated guard validating an incoming payload -->
+            <div class="prj-t12n__panel">
+              <span class="prj-t12n__tag prj-t12n__tag--rt">runtime guard</span>
+              <ul class="prj-t12n__checks">
+                <li class="prj-t12n__check is-ok"><span class="prj-t12n__mark">✓</span> id <em>number</em></li>
+                <li class="prj-t12n__check is-bad"><span class="prj-t12n__mark">✗</span> email <em>null</em></li>
+              </ul>
+              <p class="prj-t12n__throw">→ throws at the boundary</p>
             </div>
           </div>
         </div>
@@ -348,6 +377,137 @@ onMounted(() => {
 }
 @keyframes prj-blink { 50% { opacity: 0; } }
 
+/* ── visual: t12n — a type compiles down into a runtime guard ──────── */
+.prj-t12n {
+  --t12n-bad: #e0584e;
+  width: 100%;
+  max-width: clamp(300px, 32vw, 440px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.prj-t12n__panel {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  padding: 14px 16px 16px;
+  box-shadow: 0 24px 60px -34px rgba(0, 0, 0, 0.4);
+}
+.prj-t12n__tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.prj-t12n__tag--rt { color: var(--accent); }
+
+.prj-t12n__ln {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--fg);
+  white-space: nowrap;
+  b { color: var(--accent); font-weight: 500; }
+}
+.prj-t12n__ln--in { padding-left: 16px; }
+
+/* build seam — the boundary where the plugin injects the check */
+.prj-t12n__seam {
+  position: relative;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.prj-t12n__seam::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background-image: linear-gradient(var(--border) 58%, transparent 0);
+  background-size: 1px 7px;
+}
+.prj-t12n__pulse {
+  position: absolute;
+  left: 50%;
+  top: 2px;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: t12n-flow 2.6s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+.prj-t12n__badge {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: lowercase;
+  color: var(--accent);
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 999px;
+  background: var(--bg-elevated);
+}
+.prj-t12n__caret {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: var(--accent);
+}
+@keyframes t12n-flow {
+  0% { top: 2px; opacity: 0; }
+  18% { opacity: 1; }
+  82% { opacity: 1; }
+  100% { top: 44px; opacity: 0; }
+}
+
+.prj-t12n__checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.prj-t12n__check {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--fg);
+  em { margin-left: auto; font-style: normal; color: var(--muted); }
+}
+.prj-t12n__mark { width: 1ch; }
+.prj-t12n__check.is-ok .prj-t12n__mark { color: var(--accent); }
+.prj-t12n__check.is-bad {
+  .prj-t12n__mark { color: var(--t12n-bad); }
+  em { color: var(--t12n-bad); text-decoration: line-through; opacity: 0.85; }
+}
+.prj-t12n__throw {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--t12n-bad);
+}
+
 .prj__more {
   align-self: center;
   margin-top: 28px;
@@ -363,5 +523,6 @@ onMounted(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .prj-term__cursor { animation: none; }
+  .prj-t12n__pulse { animation: none; opacity: 0; }
 }
 </style>

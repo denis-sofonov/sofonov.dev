@@ -8,6 +8,14 @@ const { t, tm, locale } = useI18n()
 const meta = computed(() => tm('heroMeta') as { k: string; v: string }[])
 const looking = computed(() => tm('lookingFor.items') as { k: string; v: string }[])
 
+// SEO: the visible name is rendered as WebGL particles (invisible to crawlers),
+// so expose a real <h1>. The opposite-script name rides along in an sr-only
+// line, so every prerendered page carries both "Denis Sofonov" and "Денис
+// Софонов" — the latter is what was missing for the Cyrillic name query.
+const altLocale = computed(() => (locale.value === 'en' ? 'ru' : 'en'))
+const altName = computed(() => t('fullName', {}, { locale: altLocale.value }))
+const altRole = computed(() => t('role', {}, { locale: altLocale.value }))
+
 // ── weekly activity strip — last 26 weeks ──────────────────────────
 // Decorative by default (a deterministic "shipping rhythm"); upgrades to real
 // GitHub data only if the public profile has enough signal to look alive.
@@ -526,6 +534,10 @@ function scrollNext() {
 
 <template>
   <section id="hero" class="hero-section" data-snap-segments="1" data-snap-vp="1">
+    <!-- Real heading for crawlers/assistive tech — the visible name is a WebGL
+         particle field. Both name scripts are always present. -->
+    <h1 class="sr-only">{{ t('fullName') }} — {{ t('role') }}</h1>
+    <p class="sr-only" :lang="altLocale">{{ altName }} — {{ altRole }}</p>
     <div class="hero__content" ref="heroRoot">
       <!-- top corners — mirrored key/value notes framing the name:
            left = what i'm after, right = the basics -->
@@ -694,9 +706,19 @@ function scrollNext() {
   height: 9px;
   background: var(--accent);
   flex-shrink: 0;
-  /* mask-reveal adds bottom padding to the text tokens, nudging the flex
-     centre up — push the dot back down onto the text's optical middle */
-  transform: translateY(1px);
+  transform-origin: center;
+  /* Hidden until entrance (also kills the pre-split flash). Reveal scales it
+     up; the held end-state nudges it to the text's optical middle — lowercase
+     label, so its visual mass sits a hair below the line-box centre. */
+  opacity: 0;
+  transform: scale(0) translateY(-0.5px);
+}
+html.is-ready .hero__dot {
+  animation: hero-dot-in 0.55s cubic-bezier(0.34, 1.4, 0.5, 1) 0.45s forwards;
+}
+@keyframes hero-dot-in {
+  from { opacity: 0; transform: scale(0) translateY(-0.5px); }
+  to   { opacity: 1; transform: scale(1) translateY(-0.5px); }
 }
 .hero__desc {
   font-family: var(--font-sans);
@@ -729,8 +751,17 @@ function scrollNext() {
   color: var(--muted);
   text-decoration: none;
   transition: color 0.25s ease;
+  /* Enters just before the week tiles ripple in below it. */
+  opacity: 0;
+  transform: translateY(7px);
 
   &:hover { color: var(--accent); }
+}
+html.is-ready .hero__activity-cap {
+  animation: hero-rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.92s forwards;
+}
+@keyframes hero-rise-in {
+  to { opacity: 1; transform: translateY(0); }
 }
 .hero__activity-dot {
   width: 6px;
@@ -804,8 +835,14 @@ html.is-ready .hero__week {
   text-decoration: none;
   pointer-events: auto;
   transition: border-color 0.25s ease, color 0.25s ease, background-color 0.25s ease;
+  /* Last of the left column to arrive — closes the entrance sequence. */
+  opacity: 0;
+  transform: translateY(7px);
 
   &:hover { border-color: var(--accent); color: #fff; background: var(--accent); }
+}
+html.is-ready .hero__cv {
+  animation: hero-rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 1.3s forwards;
 }
 .hero__cv-ic { color: var(--accent); transition: transform 0.3s ease; }
 .hero__cv:hover .hero__cv-ic { color: #fff; transform: translateY(2px); }
@@ -926,6 +963,9 @@ html.is-ready .hero__corner-row {
   .hero__week { opacity: 1; transform: none; animation: none; }
   .hero__meta { opacity: 0.85; animation: none; }
   .hero__activity-dot.is-live { animation: none; }
+  .hero__dot,
+  .hero__activity-cap,
+  .hero__cv { opacity: 1; transform: none; animation: none; }
 }
 .hero__right {
   max-width: 440px;
