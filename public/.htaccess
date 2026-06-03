@@ -1,0 +1,23 @@
+# Cache policy for the static build on Apache-based hosting (reg.ru).
+# Only takes effect if Apache serves these files — if nginx serves the static
+# directly (its default ETag format suggests so), set the same rules in the
+# nginx config / hosting panel instead.
+<IfModule mod_headers.c>
+  # HTML: always revalidate so a deploy shows up without a hard refresh.
+  # ETag/Last-Modified make this a cheap 304 when nothing changed.
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+
+  # Content-hashed JS/CSS/fonts: the filename changes on every build, so the
+  # bytes under a given name never change — cache them hard.
+  <FilesMatch "\.(js|css|woff2?)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Non-hashed assets (favicons, og image, photo, sitemap): cache a day so an
+  # update still propagates within reasonable time.
+  <FilesMatch "\.(svg|png|jpe?g|webp|avif|ico|xml|txt|pdf)$">
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+</IfModule>
