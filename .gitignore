@@ -13,8 +13,12 @@ dist
 .mcp.json
 
 # ...but static assets in public/ must ship with the build (override the
-# blanket *.png/*.jpg/*.pdf ignores above) — photo, CV, org logos.
+# blanket *.png/*.jpg/*.pdf ignores above) — photo, org logos.
 !public/**
+
+# ...except the CV PDF: generated locally from /resume (Print → Save as PDF)
+# and served from the deploy — kept out of the public repo, local only.
+public/denis-sofonov-cv.pdf
 
 # local AI project instructions — not for the public repo
 CLAUDE.md

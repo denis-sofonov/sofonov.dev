@@ -536,38 +536,25 @@ function setupSectionMotion() {
       }
     },
 
-    // §04 — featured cases converge from the side their layout favours (even
-    // from the left, odd from the right), then lift away on exit. Each card's
-    // visual then *builds itself* as you keep scrolling — and because the whole
-    // timeline is scrubbed, scrolling back up unbuilds it in reverse.
+    // §04 — the spotlight assembles: the selector reel rises, the centre screen
+    // scales in, the caption follows, then the whole stage lifts away on exit.
+    // The active visual's own crossfade/auto-advance is runtime, so this only
+    // animates the stable wrappers (not the inner schematic).
     projects(tl, s) {
-      all(s, '.prj-feat').forEach((feat, i) => {
-        const fromX = i % 2 === 0 ? -90 : 90
-        const t = 0.08 + i * 0.08
-        tl.fromTo(feat, { autoAlpha: 0, x: fromX }, { autoAlpha: 1, x: 0, duration: 0.24, ease: 'power3.out' }, t)
-        tl.to(feat, { autoAlpha: 0, y: -40, duration: 0.18, ease: 'power2.in' }, 0.8)
-
-        // Onion / clean-architecture: nest in shell→core, one ring at a time.
-        // querySelectorAll returns DOM order (UI → infra → app → domain core),
-        // so the stagger reads as peeling inward toward the domain.
-        const rings = all(feat, '.prj-onion__layer--4, .prj-onion__layer--3, .prj-onion__layer--2, .prj-onion__core')
-        rings.forEach((ring, ri) => {
-          tl.fromTo(ring,
-            { autoAlpha: 0, scale: 0.5, transformOrigin: 'center center' },
-            { autoAlpha: 1, scale: 1, duration: 0.1, ease: 'back.out(1.7)' },
-            t + 0.16 + ri * 0.055)
-        })
-
-        // Scaffolding terminal: type the session out line by line.
-        const lines = all(feat, '.prj-term__line')
-        lines.forEach((line, li) => {
-          tl.fromTo(line,
-            { autoAlpha: 0, x: -12 },
-            { autoAlpha: 1, x: 0, duration: 0.09, ease: 'power2.out' },
-            t + 0.16 + li * 0.05)
-        })
-      })
-      maskIn(tl, s, '.prj-feat__title', 0.16)
+      const reel = sel(s, '.prj__reel')
+      if (reel) {
+        tl.fromTo(reel, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: 'power3.out' }, 0.06)
+        tl.to(reel, { autoAlpha: 0, y: -24, duration: 0.16, ease: 'power2.in' }, 0.82)
+      }
+      const screen = sel(s, '.prj__screen')
+      if (screen) {
+        tl.fromTo(screen, { autoAlpha: 0, scale: 0.96 }, { autoAlpha: 1, scale: 1, duration: 0.26, ease: 'power3.out' }, 0.12)
+        tl.to(screen, { autoAlpha: 0, y: -40, duration: 0.18, ease: 'power2.in' }, 0.8)
+      }
+      const cap = sel(s, '.prj__cap')
+      if (cap) {
+        tl.fromTo(cap, { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: 'power3.out' }, 0.2)
+      }
       const more = sel(s, '.prj__more')
       if (more) {
         tl.fromTo(more, { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 0.5)

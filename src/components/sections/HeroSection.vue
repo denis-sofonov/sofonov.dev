@@ -559,20 +559,11 @@ function scrollNext() {
 
       <div class="hero__bottom">
         <div class="hero__left">
-          <span class="hero__label">
-            <span class="hero__dot"></span>
-            <span
-              class="hero__label-txt"
-              data-entrance="mask"
-              data-split="chars"
-              style="--entrance-delay: 0.4s; --entrance-duration: 1.2s;"
-            >{{ t('heroLabels.availableForHire') }}</span>
-          </span>
           <p
             class="hero__desc"
             data-entrance="mask"
             data-split="words"
-            style="--entrance-delay: 0.6s;"
+            style="--entrance-delay: 0.4s;"
           ><em>{{ t('role') }}</em></p>
           <div class="hero__activity">
             <a class="hero__activity-cap" :href="ghUrl" target="_blank" rel="noopener">
@@ -693,33 +684,6 @@ function scrollNext() {
   filter: blur(calc(var(--exit) * 3px));
   will-change: translate, opacity, filter;
 }
-.hero__label {
-  font-size: 13px;
-  letter-spacing: 0;
-  color: var(--fg);
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-.hero__dot {
-  width: 9px;
-  height: 9px;
-  background: var(--accent);
-  flex-shrink: 0;
-  transform-origin: center;
-  /* Hidden until entrance (also kills the pre-split flash). Reveal scales it
-     up; the held end-state nudges it to the text's optical middle — lowercase
-     label, so its visual mass sits a hair below the line-box centre. */
-  opacity: 0;
-  transform: scale(0) translateY(-0.5px);
-}
-html.is-ready .hero__dot {
-  animation: hero-dot-in 0.55s cubic-bezier(0.34, 1.4, 0.5, 1) 0.45s forwards;
-}
-@keyframes hero-dot-in {
-  from { opacity: 0; transform: scale(0) translateY(-0.5px); }
-  to   { opacity: 1; transform: scale(1) translateY(-0.5px); }
-}
 .hero__desc {
   font-family: var(--font-sans);
   font-size: clamp(15px, 1.6vw, 20px);
@@ -733,7 +697,11 @@ html.is-ready .hero__dot {
 /* Weekly activity strip — a compact "shipping rhythm" beneath the role.
    Tiles ripple in left→right after the role has set. */
 .hero__activity {
-  margin-top: 8px;
+  /* Pull the strip up under the role so the two read as one grouped unit
+     instead of the role floating as a detached "senior" label above it.
+     (.hero__bottom is bottom-anchored, so the negative margin drops the role
+     down toward the activity rather than lifting the activity up.) */
+  margin-top: -4px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -963,7 +931,6 @@ html.is-ready .hero__corner-row {
   .hero__week { opacity: 1; transform: none; animation: none; }
   .hero__meta { opacity: 0.85; animation: none; }
   .hero__activity-dot.is-live { animation: none; }
-  .hero__dot,
   .hero__activity-cap,
   .hero__cv { opacity: 1; transform: none; animation: none; }
 }

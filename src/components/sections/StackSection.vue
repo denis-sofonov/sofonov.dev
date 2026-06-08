@@ -51,17 +51,42 @@ const TOOL_META: Record<string, Meta> = {
   'three.js':      { w: 2, since: 2023, role: { en: 'webgl scenes & particles',   ru: 'webgl-сцены и частицы' } },
   'vitest':        { w: 4, since: 2022, role: { en: 'unit tests for business logic', ru: 'юнит-тесты бизнес-логики' } },
   'jest':          { w: 3, since: 2020, role: { en: 'component & legacy tests',    ru: 'тесты компонентов и легаси' } },
+  'testing-library':{ w: 3, since: 2022, role: { en: 'user-facing component tests', ru: 'тесты компонентов как у юзера' } },
+  'playwright':    { w: 3, since: 2023, role: { en: 'end-to-end browser tests',   ru: 'e2e-тесты в браузере' } },
+  'zod':           { w: 3, since: 2022, role: { en: 'runtime schema validation',  ru: 'валидация схем в рантайме' } },
   'storybook':     { w: 3, since: 2022, role: { en: 'ui-library workbench & docs', ru: 'стенд и доки ui-библиотеки' } },
   'eslint':        { w: 4, since: 2020, role: { en: 'lint rules, consistent code', ru: 'линт, единый стиль кода' } },
   'prettier':      { w: 3, since: 2020, role: { en: 'formatting on save',         ru: 'форматирование' } },
   'figma':       { w: 4, since: 2020, role: { en: 'design + handoff',           ru: 'дизайн и хэндофф' } },
-  'sketch':      { w: 2, since: 2023, role: { en: 'handed-off legacy mockups',  ru: 'макеты на легаси-проектах' } },
   'git':         { w: 5, since: 2019, role: { en: 'every project, every day',   ru: 'каждый проект, каждый день' } },
   'github':      { w: 4, since: 2019, role: { en: 'host + code review',         ru: 'хост и ревью' } },
   'gitlab ci':   { w: 4, since: 2021, role: { en: 'pipelines, lint, hooks',     ru: 'пайплайны, линт, хуки' } },
   'docker':      { w: 3, since: 2022, role: { en: 'reproducible environments',  ru: 'воспроизводимое окружение' } },
   'vite':        { w: 3, since: 2022, role: { en: 'every fresh project',        ru: 'в каждом новом проекте' } },
   'pnpm':        { w: 3, since: 2023, role: { en: 'package manager of choice',  ru: 'мой пакетный менеджер' } },
+}
+
+// ── backend tool descriptions ──────────────────────────────────────
+// Mirrors the frontend metadata (since + role) so backend nodes read with the
+// exact same hover readout. Maps every name across all backLangs.
+const BACK_META: Record<string, { since: number; en: string; ru: string }> = {
+  // node
+  'express':    { since: 2021, en: 'lightweight node web framework', ru: 'лёгкий веб-фреймворк на node' },
+  'nest':       { since: 2022, en: 'structured node framework',      ru: 'структурный фреймворк на node' },
+  'postgres':   { since: 2021, en: 'primary relational store',       ru: 'основная реляционная бд' },
+  // python
+  'fastapi':    { since: 2024, en: 'async python web framework',     ru: 'асинхронный веб-фреймворк на python' },
+  'pydantic':   { since: 2024, en: 'typed validation & parsing',     ru: 'типобезопасная валидация' },
+  'sqlalchemy': { since: 2024, en: 'orm & query layer',              ru: 'orm и слой запросов' },
+  'alembic':    { since: 2024, en: 'database migrations',            ru: 'миграции базы' },
+  'arq':        { since: 2024, en: 'async task queue on redis',      ru: 'асинхронная очередь задач на redis' },
+  'pytest':     { since: 2024, en: 'unit & e2e tests',               ru: 'юнит- и e2e-тесты' },
+  // php
+  'laravel':    { since: 2024, en: 'primary php framework',          ru: 'основной php-фреймворк' },
+  'sanctum':    { since: 2024, en: 'token auth for the api',         ru: 'токен-авторизация api' },
+  'eloquent':   { since: 2024, en: 'active-record orm',              ru: 'orm на active record' },
+  'pest':       { since: 2024, en: 'expressive php tests',           ru: 'выразительные тесты на php' },
+  'larastan':   { since: 2024, en: 'static analysis for php',        ru: 'статический анализ php' },
 }
 
 // Hand-placed constellation for the FRONTEND view. Coordinates are 0..1 of the
@@ -78,6 +103,7 @@ const POS: Record<string, { x: number; y: number }> = {
   'zustand':        { x: 0.92, y: 0.20 },
   // ~0.30
   'typescript':     { x: 0.35, y: 0.31 },
+  'zod':            { x: 0.55, y: 0.31 },
   'next.js':        { x: 0.74, y: 0.29 },
   'jest':           { x: 0.92, y: 0.34 },
   // ~0.42
@@ -85,6 +111,7 @@ const POS: Record<string, { x: number; y: number }> = {
   'javascript':     { x: 0.25, y: 0.45 },
   'gsap':           { x: 0.49, y: 0.42 },
   'vitest':         { x: 0.67, y: 0.44 },
+  'playwright':     { x: 0.84, y: 0.40 },
   'github':         { x: 0.95, y: 0.47 },
   // ~0.55
   'scss':           { x: 0.13, y: 0.56 },
@@ -102,7 +129,7 @@ const POS: Record<string, { x: number; y: number }> = {
   'docker':         { x: 0.82, y: 0.82 },
   // bottom band
   'vite':           { x: 0.05, y: 0.84 },
-  'sketch':         { x: 0.27, y: 0.89 },
+  'testing-library':{ x: 0.27, y: 0.89 },
   'eslint':         { x: 0.49, y: 0.91 },
   'prettier':       { x: 0.70, y: 0.92 },
   'pnpm':           { x: 0.92, y: 0.91 },
@@ -127,13 +154,15 @@ const RELATIONS: Record<string, string[]> = {
   'radix':         ['tailwind', 'vue 3'],
   'gsap':          ['vue 3', 'three.js'],
   'three.js':      ['vue 3', 'gsap'],
-  'vitest':        ['typescript', 'jest', 'vite'],
-  'jest':          ['vitest', 'storybook'],
+  'vitest':        ['typescript', 'jest', 'vite', 'playwright', 'testing-library'],
+  'jest':          ['vitest', 'storybook', 'testing-library'],
+  'testing-library':['vitest', 'jest'],
+  'playwright':    ['vitest', 'jest'],
+  'zod':           ['typescript', 'react', 'vue 3'],
   'storybook':     ['vue 3', 'radix', 'jest'],
   'eslint':        ['prettier', 'typescript'],
   'prettier':      ['eslint'],
-  'figma':       ['sketch'],
-  'sketch':      ['figma'],
+  'figma':       ['storybook'],
   'git':         ['github', 'gitlab ci'],
   'github':      ['git'],
   'gitlab ci':   ['git', 'docker', 'vitest'],
@@ -230,8 +259,8 @@ const hoveredTool = ref<string | null>(null)
 const hoveredNode = computed(() => hoveredTool.value ? nodeByName.value[hoveredTool.value] : null)
 const hoveredMeta = computed(() => hoveredTool.value ? TOOL_META[hoveredTool.value] : null)
 
-// Readout meta line — frontend tools carry since + role; backend nodes report
-// their stage (in production / learning) instead.
+// Readout meta line — tools carry the same since + role line in both modes;
+// the backend centre language node reports its overall stage instead.
 const readoutText = computed(() => {
   const node = hoveredNode.value
   if (!node) return ''
@@ -239,7 +268,9 @@ const readoutText = computed(() => {
     return `${sinceLabel.value} ${hoveredMeta.value.since} · ${role(hoveredMeta.value)}`
   }
   if (node.center) return node.status ?? ''
-  return node.learning ? t('stack.learning') : t('stack.inProd')
+  const desc = BACK_META[node.name]
+  if (desc) return `${sinceLabel.value} ${desc.since} · ${locale.value === 'ru' ? desc.ru : desc.en}`
+  return t('stack.inProd')
 })
 
 const proximityTool = ref<string | null>(null)

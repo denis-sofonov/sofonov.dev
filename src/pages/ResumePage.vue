@@ -5,12 +5,12 @@ import gsap from 'gsap'
 import {
   siVuedotjs, siTypescript, siJavascript, siNuxt, siReact, siNextdotjs,
   siSass, siTailwindcss, siPinia, siRedux, siGsap, siVitest, siDocker,
-  siGit, siVite, siNodedotjs, siPython, siGo, siPhp, siRuby,
+  siGit, siVite, siNodedotjs, siPython, siPhp,
   siReactrouter, siThreedotjs, siStorybook, siEslint, siPrettier,
-  siFigma, siSketch, siGithub, siGitlab, siPnpm,
+  siFigma, siGithub, siGitlab, siPnpm,
   siHtml5, siCss, siGraphql, siAxios, siZod, siSwagger, siCypress,
   siWebpack, siBabel, siLaravel, siPostgresql, siRedis,
-  siRadixui, siJest, siTanstack,
+  siRadixui, siJest, siTanstack, siTestinglibrary,
 } from 'simple-icons'
 
 const { t, tm } = useI18n()
@@ -35,9 +35,7 @@ const ICON_PATHS: Record<string, string> = {
   vite: siVite.path,
   node: siNodedotjs.path,
   python: siPython.path,
-  go: siGo.path,
   php: siPhp.path,
-  ruby: siRuby.path,
   'vue router': siVuedotjs.path,
   'react router': siReactrouter.path,
   vuex: siVuedotjs.path,
@@ -46,7 +44,6 @@ const ICON_PATHS: Record<string, string> = {
   eslint: siEslint.path,
   prettier: siPrettier.path,
   figma: siFigma.path,
-  sketch: siSketch.path,
   github: siGithub.path,
   'gitlab ci': siGitlab.path,
   pnpm: siPnpm.path,
@@ -65,6 +62,7 @@ const ICON_PATHS: Record<string, string> = {
   radix: siRadixui.path,
   jest: siJest.path,
   'tanstack query': siTanstack.path,
+  'testing-library': siTestinglibrary.path,
 }
 const iconFor = (name: string): string | null => ICON_PATHS[name.toLowerCase()] ?? null
 
@@ -74,10 +72,7 @@ const iconFor = (name: string): string | null => ICON_PATHS[name.toLowerCase()] 
 // Local logo files (drop them in public/logos/) take precedence — best quality,
 // no external request. If the file is missing it errors out and we fall back to
 // the favicon, then to the letter monogram.
-const LOGO_FILES: Record<string, string> = {
-  GlavNIVC: '/logos/glavnivc.png',
-  'ГлавНИВЦ': '/logos/glavnivc.png',
-}
+const LOGO_FILES: Record<string, string> = {}
 // Favicon fallback for orgs with a clean public icon (Google's favicon service).
 const DOMAINS: Record<string, string> = {
   'Azbuka Vkusa': 'av.ru',
@@ -92,11 +87,17 @@ const logoFailed = ref<Record<number, boolean>>({})
 
 // Generic placeholder glyph for employers with no public logo (e.g. the agency
 // "Web Studio") — a neutral code mark rather than a bare initial.
-const PLACEHOLDER_ORGS = new Set(['Web Studio', 'Веб-студия'])
+const PLACEHOLDER_ORGS = new Set(['Web Studio', 'Веб-студия', 'Gov-tech integrator', 'Гос-интегратор'])
 const PLACEHOLDER_PATH = 'M9.4 16.6 4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0 4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z'
 
-const cvHref = '/denis-sofonov-cv.pdf'
 const photo = '/denis-sofonov.jpg'
+
+// The résumé PDF is the page itself — open the print dialog (Save as PDF) so the
+// downloaded file always matches the site and stays text-selectable. The print
+// stylesheet pins a clean light-palette document.
+function printResume() {
+  window.print()
+}
 
 interface Item {
   tag: string
@@ -109,7 +110,7 @@ interface Item {
   points: string[]
   stack: string[]
 }
-interface Feature { repo: string; title: string; tagline: string; tags: string[]; url: string; demo: string }
+interface Feature { repo: string; title: string; tagline: string; tags: string[]; url: string; demo?: string }
 
 const items = computed(() => tm('experience.items') as Item[])
 const looking = computed(() => tm('lookingFor.items') as { k: string; v: string }[])
@@ -124,9 +125,9 @@ const SKILL_GROUPS = [
   { key: 'state', tools: ['pinia', 'vuex', 'redux', 'zustand'] },
   { key: 'styling', tools: ['tailwind', 'radix', 'gsap', 'three.js', 'figma'] },
   { key: 'apidata', tools: ['graphql', 'tanstack query', 'zod', 'swagger'] },
-  { key: 'testing', tools: ['vitest', 'jest', 'cypress', 'storybook', 'eslint'] },
+  { key: 'testing', tools: ['vitest', 'jest', 'testing-library', 'playwright', 'storybook', 'eslint'] },
   { key: 'tooling', tools: ['vite', 'webpack', 'git', 'github', 'gitlab ci', 'docker'] },
-  { key: 'backend', tools: ['node', 'php', 'laravel', 'postgresql', 'redis'] },
+  { key: 'backend', tools: ['node', 'python', 'php', 'laravel', 'postgresql', 'redis'] },
 ]
 
 const channels = [
@@ -188,9 +189,9 @@ onMounted(() => {
       <RouterLink to="/" class="resume__back">
         <span class="resume__back-ic" aria-hidden="true">←</span>{{ t('resume.back') }}
       </RouterLink>
-      <a class="resume__dl" :href="cvHref" download data-cursor="cta" :data-cursor-text="t('resume.download')">
+      <button type="button" class="resume__dl" data-cursor="cta" :data-cursor-text="t('resume.download')" @click="printResume">
         <span class="resume__dl-ic" aria-hidden="true">↓</span>{{ t('resume.download') }}
-      </a>
+      </button>
     </nav>
 
     <article class="sheet">
@@ -330,7 +331,7 @@ onMounted(() => {
                 <p class="proj__tags">{{ p.tags.slice(0, 4).join(' · ') }}</p>
                 <p class="proj__links">
                   <a :href="p.url" target="_blank" rel="noopener">code <span aria-hidden="true">↗</span></a>
-                  <a :href="p.demo" target="_blank" rel="noopener">demo <span aria-hidden="true">↗</span></a>
+                  <a v-if="p.demo" :href="p.demo" target="_blank" rel="noopener">demo <span aria-hidden="true">↗</span></a>
                 </p>
               </li>
             </ul>
@@ -339,9 +340,9 @@ onMounted(() => {
       </div>
 
       <footer class="sheet__foot" data-rev>
-        <a class="resume__dl resume__dl--foot" :href="cvHref" download>
+        <button type="button" class="resume__dl resume__dl--foot" @click="printResume">
           <span class="resume__dl-ic" aria-hidden="true">↓</span>{{ t('resume.download') }}
-        </a>
+        </button>
       </footer>
     </article>
   </main>
@@ -392,14 +393,18 @@ onMounted(() => {
   padding: 9px 18px;
   background: var(--accent);
   color: #fff;
+  border: 0;
   border-radius: 4px;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   text-decoration: none;
+  cursor: pointer;
+  appearance: none;
   transition: background-color 0.2s ease, transform 0.2s ease;
   &:hover { background: #0a0a0a; transform: translateY(-1px); }
+  &:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 }
 :root[data-theme='dark'] .resume__dl:hover { background: #fff; color: var(--accent); }
 .resume__dl-ic { color: currentColor; }
@@ -854,11 +859,33 @@ onMounted(() => {
 .resume__dl--foot { background: transparent; color: var(--fg); border: 1px solid var(--border); }
 .resume__dl--foot:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-/* ── print: a clean one-document résumé ─────────────────────────── */
+/* ── print: a clean, ATS-friendly one-document résumé ───────────────
+   The download is meant to be this page exported via "Print → Save as
+   PDF", so the text stays real/selectable (no rasterisation). A light
+   palette is pinned here so a dark-theme export doesn't come out as
+   white-on-white. */
+@page { margin: 12mm 14mm; }
+
 @media print {
-  .resume { padding: 0; }
+  /* Pin a light, high-contrast palette regardless of the active theme. */
+  .resume {
+    --bg: #ffffff;
+    --bg-elevated: #ffffff;
+    --bg-alt: #ffffff;
+    --fg: #0c0c0c;
+    --muted: #565656;
+    --border: #d9d9d9;
+    --accent: #b3231f;
+    padding: 0;
+    gap: 0;
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* drop interactive chrome */
   .resume__bar, .sheet__foot, .sheet__photo-glare { display: none; }
-  .sheet__photo-inner { transform: none !important; box-shadow: none !important; }
+
   .sheet {
     width: 100%;
     border: 0;
@@ -866,7 +893,34 @@ onMounted(() => {
     box-shadow: none;
     padding: 0;
     background: #fff;
-    color: #000;
+  }
+  .sheet__photo-inner {
+    transform: none !important;
+    box-shadow: 0 0 0 1px var(--border) !important;
+  }
+  .sheet__rule { margin: 18px 0; }
+
+  /* tighten type so it reads as a document, not a scaled-up webpage */
+  .sheet__name { font-size: 30px; }
+  .sheet__role { font-size: 13.5px; }
+  .xp__org { font-size: 17px; }
+  .proj__title { font-size: 15px; }
+  .block__h { font-size: 9.5px; }
+
+  /* never split an entry across a page break */
+  .sheet__head,
+  .block,
+  .xp__item,
+  .proj__item,
+  .contact__row,
+  .kv__row { break-inside: avoid; }
+
+  /* reveal-on-scroll blocks must be visible even if the entrance JS
+     left them faded/translated at the moment of printing */
+  [data-rev] {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
   }
 }
 
